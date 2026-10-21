@@ -36,6 +36,7 @@ class Settings:
     model_provider: str
     model_api_key: str | None
     model_name: str
+    backboard_llm_provider: str
     search_provider: str
     search_api_key: str | None
     research_inline: bool
@@ -97,6 +98,7 @@ def load_settings() -> Settings:
         model_provider=os.environ.get("MODEL_PROVIDER", "openai").strip().lower() or "openai",
         model_api_key=_optional("MODEL_API_KEY"),
         model_name=os.environ.get("MODEL_NAME", "").strip(),
+        backboard_llm_provider=os.environ.get("BACKBOARD_LLM_PROVIDER", "openai").strip().lower() or "openai",
         search_provider=os.environ.get("SEARCH_PROVIDER", "tavily").strip().lower() or "tavily",
         search_api_key=_optional("SEARCH_API_KEY"),
         research_inline=_flag("RESEARCH_INLINE", "false"),

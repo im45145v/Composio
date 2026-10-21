@@ -7,7 +7,8 @@ import os
 import httpx
 import pytest
 
-from app.research.llm import AnthropicModel, OpenAIModel
+from app.research.errors import ModelError
+from app.research.llm import AnthropicModel, BackboardModel, GemmaModel, OpenAIModel
 from app.research.search import BraveSearch, TavilySearch
 
 
@@ -115,6 +116,79 @@ def test_anthropic_adapter_reads_text_blocks():
     assert text == "{\"ok\": true}"
 
 
+def test_backboard_requests_json_and_hides_rejected_key_bodies():
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url == "https://app.backboard.io/api/threads/messages"
+        assert request.headers["x-api-key"] == "test-key"
+        body = request.read().decode()
+        assert '"llm_provider":"openai"' in body.replace(" ", "")
+        assert '"model_name":"gpt-4o-mini"' in body.replace(" ", "")
+        assert '"json_output":true' in body.replace(" ", "")
+        assert '"memory":"off"' in body.replace(" ", "")
+        assert '"web_search":"off"' in body.replace(" ", "")
+        return httpx.Response(200, json={"content": "{\"ok\": true}", "thread_id": "thread-1"})
+
+    text = BackboardModel(
+        "test-key",
+        "gpt-4o-mini",
+        llm_provider="openai",
+        transport=httpx.MockTransport(handler),
+    ).complete(system="system", user="user")
+    assert text == "{\"ok\": true}"
+
+    def rejected(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, json={"detail": "Invalid or missing API key sk-secretvalue"})
+
+    with pytest.raises(ModelError) as model_error:
+        BackboardModel(
+            "test-key",
+            "gpt-4o-mini",
+            llm_provider="openai",
+            transport=httpx.MockTransport(rejected),
+        ).complete(system="system", user="user")
+    assert "MODEL_API_KEY" in model_error.value.message
+    assert "sk-secretvalue" not in model_error.value.message
+
+
+def test_gemma_requests_json_and_skips_thought_parts():
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url) == (
+            "https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent"
+        )
+        assert request.headers["x-goog-api-key"] == "test-key"
+        body = request.read().decode()
+        assert "application/json" in body
+        assert "system" in body
+        return httpx.Response(
+            200,
+            json={
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {"text": "thinking", "thought": True},
+                                {"text": "{\"ok\": true}"},
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    text = GemmaModel("test-key", "gemma-4-26b-a4b-it", transport=httpx.MockTransport(handler)).complete(
+        system="system",
+        user="user",
+    )
+    assert text == "{\"ok\": true}"
+
+    with pytest.raises(ModelError) as model_error:
+        GemmaModel("test-key", "../secret", transport=httpx.MockTransport(handler)).complete(
+            system="system",
+            user="user",
+        )
+    assert "MODEL_NAME" in model_error.value.message
+
+
 def test_env_file_fills_unset_keys_only(tmp_path, monkeypatch):
     from app.config import load_env_file
 
@@ -157,3 +231,16 @@ def test_factory_selects_the_configured_vendors(tmp_path, monkeypatch):
     monkeypatch.setenv("MODEL_PROVIDER", "nope")
     unconfigured = create_app()
     assert unconfigured.state.research.configured is False
+
+    monkeypatch.setenv("MODEL_PROVIDER", "backboard")
+    monkeypatch.setenv("BACKBOARD_LLM_PROVIDER", "google")
+    monkeypatch.setenv("MODEL_NAME", "")
+    backboard = create_app()
+    assert isinstance(backboard.state.research.model, BackboardModel)
+    assert backboard.state.research.model._llm_provider == "google"
+    assert backboard.state.research.model._model == "gemma-4-26b-a4b-it"
+
+    monkeypatch.setenv("MODEL_PROVIDER", "gemma")
+    gemma = create_app()
+    assert isinstance(gemma.state.research.model, GemmaModel)
+    assert gemma.state.research.model._model == "gemma-4-26b-a4b-it"

@@ -104,7 +104,9 @@ Guide addresses are the frontend routes above. A static host needs to serve `ind
 
 ## Research
 
-`MODEL_PROVIDER` is `openai` (default model `gpt-4o-mini`) or `anthropic` (default model `claude-sonnet-4-5`). `SEARCH_PROVIDER` is `tavily` or `brave`. `MODEL_NAME` overrides the model id.
+`MODEL_PROVIDER` is `openai` (default model `gpt-4o-mini`), `anthropic` (default model `claude-sonnet-4-5`), `backboard`, or `gemma` (default model `gemma-4-26b-a4b-it` on the Gemini API). `MODEL_NAME` overrides the model id. `SEARCH_PROVIDER` is `tavily` or `brave`.
+
+`backboard` sends `MODEL_API_KEY` as the Backboard `X-API-Key` and calls `https://app.backboard.io/api/threads/messages`. `BACKBOARD_LLM_PROVIDER` chooses the upstream: `openai` (default model `gpt-4o-mini`) or `google` (default model `gemma-4-26b-a4b-it`). Memory and Backboard web search stay off, so a guide still has to come from pages this app fetched. `gemma` calls the Gemini API directly with a Google AI Studio key and the same default Gemma model. The other hosted Gemma 4 id is `gemma-4-31b-it`.
 
 A run searches, fetches public pages, and asks the model to extract a guide from those pages only. Search snippets are not evidence. The model output is checked with Pydantic. A fenced JSON object is accepted; anything that is not the guide schema is rejected. Documented claims must cite a retrieved page and overlap its text. Inferred claims that do not overlap the cited page are dropped. URLs and durations must appear in the cited page. If two retrieved pages give different review durations, the wait is stored as unknown and both figures are kept. A guide is saved only when an authentication type, at least one step, and at least one human action survive that check. Each saved claim records the first cited page URL. Output that contains a client secret, API key, or access token is discarded.
 
