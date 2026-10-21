@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import json
+from datetime import date
+from pathlib import Path
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -128,17 +132,63 @@ def _ensure_columns(engine) -> None:
                     connection.exec_driver_sql(statement)
 
 
+GENERATED = Path(__file__).resolve().parent / "generated"
+
+
 def seed_database(engine) -> None:
     from app.database import create_session_factory
 
     session_factory = create_session_factory(engine)
     with session_factory() as session:
-        slugs = [payload["slug"] for payload in GUIDES]
+        payloads = [*GUIDES, *_generated_payloads()]
+        slugs = [payload["slug"] for payload in payloads]
         if len(slugs) != len(set(slugs)):
             raise ValueError("Seed slugs must be unique.")
-        for payload in GUIDES:
+        for payload in payloads:
             _upsert_guide(session, payload)
         session.commit()
+
+
+def _generated_payloads() -> list[dict]:
+    if not GENERATED.is_dir():
+        return []
+    payloads = []
+    for path in sorted(GENERATED.glob("*.json")):
+        detail = json.loads(path.read_text())
+        payloads.append(_payload_from_detail(detail))
+    return payloads
+
+
+def _payload_from_detail(detail: dict) -> dict:
+    checked = detail["last_checked"]
+    if isinstance(checked, str):
+        checked = date.fromisoformat(checked)
+    composio = detail["composio"]
+    return {
+        "slug": detail["slug"],
+        "name": detail["name"],
+        "summary": detail["summary"],
+        "decision": detail["decision"],
+        "execution_note": detail["execution_note"],
+        "tested": bool(detail["tested"]),
+        "last_checked": checked,
+        "origin": "researched",
+        "managed_by_seed": True,
+        "auth_type": detail["auth_type"],
+        "setup_path": detail["setup_path"],
+        "difficulty": detail["difficulty"],
+        "active_effort": detail["active_effort"],
+        "approval_wait": detail["approval_wait"],
+        "confidence": detail["confidence"],
+        "managed": composio["managed"],
+        "byo": composio["bring_your_own"],
+        "redirect": composio["redirect_uri"],
+        "prerequisites": detail["prerequisites"],
+        "steps": detail["steps"],
+        "blockers": detail["blockers"],
+        "human_actions": detail["human_actions"],
+        "sources": detail["sources"],
+    }
 
 
 def _require_status(status: str, label: str) -> None:
@@ -149,12 +199,12 @@ def _require_status(status: str, label: str) -> None:
 def _upsert_guide(session: Session, payload: dict) -> None:
     slug = payload["slug"]
     guide = session.scalar(select(Guide).where(Guide.slug == slug))
-    if guide is not None and guide.origin == "researched":
+    if guide is not None and guide.origin == "researched" and not payload.get("managed_by_seed"):
         return
     if guide is None:
         guide = Guide(slug=slug, name=payload["name"], summary=payload["summary"], origin="editorial")
         session.add(guide)
-    guide.origin = "editorial"
+    guide.origin = payload.get("origin", "editorial")
 
     guide.name = payload["name"]
     guide.summary = payload["summary"]
@@ -162,7 +212,7 @@ def _upsert_guide(session: Session, payload: dict) -> None:
     guide.execution_note = payload["execution_note"]
     guide.tested = bool(payload["tested"])
     guide.last_checked = payload["last_checked"]
-    guide.claim_sources_json = "{}"
+    claim_sources: dict[str, str] = {}
 
     setup = payload["setup_path"]
     if setup["value"] not in SETUP_PATHS:
@@ -173,12 +223,18 @@ def _upsert_guide(session: Session, payload: dict) -> None:
     guide.setup_path_status = setup["status"]
     guide.setup_path_note = setup.get("note")
 
+    if setup.get("source_url"):
+        claim_sources["setup_path"] = setup["source_url"]
+
     for prefix in CLAIM_PREFIXES:
         claim = payload[prefix]
         _require_status(claim["status"], f"{slug} {prefix}")
-        setattr(guide, f"{prefix}_value", claim["value"])
+        setattr(guide, f"{prefix}_value", claim.get("value") or "Unknown")
         setattr(guide, f"{prefix}_status", claim["status"])
         setattr(guide, f"{prefix}_note", claim.get("note"))
+        if claim.get("source_url"):
+            claim_sources[prefix] = claim["source_url"]
+    guide.claim_sources_json = json.dumps(claim_sources)
 
     guide.items.clear()
     guide.sources.clear()
@@ -187,7 +243,8 @@ def _upsert_guide(session: Session, payload: dict) -> None:
     for kind, field in KIND_FIELDS:
         for position, item in enumerate(payload[field], start=1):
             _require_status(item["status"], f"{slug} {kind} {position}")
-            audience = ITEM_AUDIENCE.get((slug, kind, item["title"]), "shared")
+            supplied = item.get("audience")
+            audience = supplied if supplied in AUDIENCES else ITEM_AUDIENCE.get((slug, kind, item["title"]), "shared")
             if audience not in AUDIENCES:
                 raise ValueError(f"{slug} {kind} {item['title']!r} has unknown audience {audience!r}.")
             guide.items.append(
@@ -198,6 +255,7 @@ def _upsert_guide(session: Session, payload: dict) -> None:
                     body=item["body"],
                     status=item["status"],
                     note=item.get("note"),
+                    source_url=item.get("source_url"),
                     audience=audience,
                 )
             )

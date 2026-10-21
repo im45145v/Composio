@@ -1,0 +1,167 @@
+{
+  "slug": "notion",
+  "name": "Notion",
+  "summary": "This guide explains how to set up OAuth 2.0 authentication for a Notion integration, enabling secure connections between Notion workspaces and external applications via public integrations. Notion supports three authentication modes: public OAuth connections, internal (API key/token), and personal access tokens (PATs). Public connections are recommended for apps that will be connected by users from multiple workspaces and follow the OAuth flow, while internal connections are suited for single workspace automation. The setup procedure involves registering an app in Notion's developer portal, configuring OAuth settings including a precise, HTTPS redirect URI, and finally exchanging authorization codes for access tokens.",
+  "decision": "Follow the public OAuth setup path for Notion. You must create a public integration in the Notion developer portal, configure the connection for OAuth (not internal type), and use the specified redirect URI. After configuration, supply the generated client credentials and redirect URI to Composio as described. Do not use internal (API key/token) authentication unless integrating only with your own workspace and not supporting multiple users. The passages support using your own OAuth app, with no mention of a managed app.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2.0",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developers.notion.com/guides/get-started/overview.md"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "Composio requires you to register your own public Notion integration and use its OAuth credentials for the connection. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "The process involves registering an app, configuring OAuth, and understanding scopes/capabilities. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Includes creating the integration, configuring OAuth, setting up permissions, and entering credentials in Composio. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "No approval/review is needed unless planning to publish on Notion Marketplace.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "Follow the public OAuth setup path for Notion. You must create a public integration in the Notion developer portal, configure the connection for OAuth (not internal type), and use the specified redirect URI. After configuration, supply the generated client credentials and redirect URI to Composio as described. Do not use internal (API key/token) authentication unless integrating only with your own workspace and not supporting multiple users. The passages support using your own OAuth app, with no mention of a managed app.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "No evidence was found for a managed or provider-hosted OAuth app option.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "The guide has detailed steps for registering your own OAuth app for Notion. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v3/toolkits/auth/callback",
+      "status": "documented",
+      "note": "This specific URI must be set as the integration's OAuth Redirect URI for Composio integrations.",
+      "source_url": "https://composio.dev/auth/notion"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Create a Notion account and workspace",
+      "body": "You need a Notion account and workspace. Sign up for a free workspace if you don't already have one.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/notion",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Go to Notion integrations page",
+      "body": "Navigate to https://www.notion.so/profile/integrations and click 'New integration'.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/notion",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure the new integration",
+      "body": "Set the integration name, select the workspace, choose 'Public' integration type, and fill required fields.",
+      "status": "documented",
+      "note": "The integration must be public for OAuth 2.0 support.",
+      "source_url": "https://composio.dev/auth/notion",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Set Capabilities (Permissions)",
+      "body": "Choose the required capabilities like Read content, Update content, Insert content, and Read user information. Only select what is necessary for your integration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/notion",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Copy OAuth client credentials",
+      "body": "After saving, copy the Client ID and Client Secret generated by Notion. Keep the secret secure.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/notion",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Set up OAuth credentials in Composio",
+      "body": "In the Composio Dashboard (https://platform.composio.dev/), create a new Notion Auth Config using 'OAuth2', enable 'Use your own developer authentication', and enter the Client ID, Client Secret, and redirect URI from the previous steps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/notion",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register a Public integration in Notion's developer portal",
+      "body": "A person must manually create the integration, configure OAuth, set the redirect URI and capabilities, and copy the client credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/notion",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Enter OAuth credentials into Composio",
+      "body": "A person must input Client ID, Client Secret, and Redirect URI as required by Composio's Auth Config setup.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/notion",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Overview",
+      "url": "https://developers.notion.com/guides/get-started/overview.md",
+      "publisher": "developers.notion.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting up Notion",
+      "url": "https://composio.dev/auth/notion",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Authorization",
+      "url": "https://developers.notion.com/guides/get-started/authorization",
+      "publisher": "developers.notion.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

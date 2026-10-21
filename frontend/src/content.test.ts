@@ -3,6 +3,7 @@ import {
   formatCheckedDate,
   gapSentence,
   isStale,
+  opening,
   isStated,
   previewClaim,
   showsWait,
@@ -35,6 +36,16 @@ describe("previewClaim", () => {
   });
 });
 
+describe("opening", () => {
+  it("keeps the first two sentences of a long wait", () => {
+    const text =
+      "Marketplace review is optional. When you submit, Slack's bound is up to 10 weeks. Creating the app has no published duration.";
+    expect(opening(text, 2, 200)).toBe(
+      "Marketplace review is optional. When you submit, Slack's bound is up to 10 weeks.",
+    );
+  });
+});
+
 describe("stated claims", () => {
   it("hides an empty unknown and keeps a documented sentence", () => {
     expect(isStated({ value: "Unknown", status: "unknown" })).toBe(false);
@@ -54,6 +65,12 @@ describe("stated claims", () => {
       "Calendly uses OAuth for its API.",
     );
     expect(readableDecision("Use managed auth.", "A longer summary.")).toBe("Use managed auth.");
+    expect(
+      readableDecision(
+        "Create a public integration. The passages support using your own OAuth app, with no mention of a managed app.",
+        "A longer summary.",
+      ),
+    ).toBe("Create a public integration.");
   });
 
   it("names only the gaps the pages left open", () => {

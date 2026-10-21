@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ApiError, fetchHealth, fetchResearchRun, researchEventsUrl, submitRecheck, submitResearch } from "../api";
+import { ApiError, fetchResearchRun, researchEventsUrl, submitRecheck, submitResearch } from "../api";
 import { ErrorBlock } from "../components/StatusBlock";
 import { GUIDE_FIELDS } from "../content";
 import type { ResearchProgress, ResearchUnavailable } from "../types";
@@ -54,7 +54,6 @@ export function ResearchPage() {
   const recheck = params.get("recheck");
   const [appName, setAppName] = useState(prefill);
   const [docsUrl, setDocsUrl] = useState("");
-  const [researchMode, setResearchMode] = useState<"configured" | "unavailable" | "unknown">("unknown");
   const [state, setState] = useState<ResultState>({ status: "idle" });
 
   useEffect(() => {
@@ -62,14 +61,6 @@ export function ResearchPage() {
       setAppName(prefill);
     }
   }, [prefill, recheck]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchHealth(controller.signal)
-      .then(setResearchMode)
-      .catch(() => setResearchMode("unavailable"));
-    return () => controller.abort();
-  }, []);
 
   useEffect(() => {
     document.title = "Research an app · Field Guide";
@@ -219,8 +210,6 @@ export function ResearchPage() {
   }, -1);
   const kept = events.filter((item) => item.url && item.message.startsWith("Read "));
   const skipped = events.filter((item) => /skipped|could not read/i.test(item.message));
-  const docsRequired = researchMode === "configured";
-
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="max-w-2xl">
@@ -255,19 +244,21 @@ export function ResearchPage() {
           <div>
             <label htmlFor="docs-url" className="text-sm font-medium">
               Documentation URL{" "}
-              {docsRequired ? null : <span className="font-normal text-muted">(optional until research is connected)</span>}
+              {recheck ? null : <span className="font-normal text-muted">(optional)</span>}
             </label>
             <input
               id="docs-url"
               type="url"
-              required={docsRequired || Boolean(recheck)}
+              required={Boolean(recheck)}
               value={docsUrl}
               onChange={(event) => setDocsUrl(event.target.value)}
               placeholder="https://"
               className="mt-2 w-full border border-line-strong bg-raised px-3 py-3"
             />
             <p className="mt-2 text-sm leading-6 text-muted">
-              Research reads at most four pages. A documentation URL keeps those pages on this app.
+              {recheck
+                ? "A recheck reads this documentation URL again and stores a candidate beside the live guide."
+                : "A name or website is enough. Add a documentation URL when you want those pages included in the four that get read."}
             </p>
           </div>
           <button

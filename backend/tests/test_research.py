@@ -288,7 +288,7 @@ def test_invalid_input_and_ssrf_urls_are_rejected(client, research_app):
             assert response.json()["detail"]["code"] in {"unsafe_url", "blocked_address", "unsupported_protocol"}
         name_url = configured.post("/api/research-requests", json={"app_name": "http://127.0.0.1/latest"})
         assert name_url.status_code == 422
-        assert configured.get("/api/guides").json()["count"] == 3
+        assert configured.get("/api/guides").json()["count"] == 4
     blank = client.post("/api/research-requests", json={"app_name": "   "})
     assert blank.status_code == 422
     private = client.post(
@@ -296,7 +296,7 @@ def test_invalid_input_and_ssrf_urls_are_rejected(client, research_app):
         json={"app_name": "Notion", "docs_url": "http://192.168.1.20/docs"},
     )
     assert private.status_code == 422
-    assert client.get("/api/guides/notion").status_code == 404
+    assert client.get("/api/guides/notion").json()["origin"] == "researched"
 
 
 def test_search_failure_streams_a_terminal_error(research_app):
@@ -723,12 +723,12 @@ def test_provider_rejection_is_shown_on_the_run(research_app):
         assert client.get("/api/guides/example").status_code == 404
 
 
-def test_a_new_app_needs_a_documentation_url(research_app):
+def test_a_name_alone_starts_research(research_app):
     with TestClient(research_app) as client:
         response = client.post("/api/research-requests", json={"app_name": "Example"})
-        assert response.status_code == 422
-        assert response.json()["detail"]["code"] == "docs_url_required"
-        assert client.get("/api/guides/example").status_code == 404
+        assert response.status_code == 202
+        assert response.json()["guide_created"] is True
+        assert client.get("/api/guides/example").status_code == 200
 
 
 def test_recheck_waits_for_promotion_and_survives_the_seed(research_app):

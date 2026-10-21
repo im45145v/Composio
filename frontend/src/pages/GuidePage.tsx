@@ -175,6 +175,9 @@ function GuideDocument({ slug }: { slug: string }) {
         <h1 className="mt-2 font-serif text-4xl leading-tight sm:text-5xl">{guide.name}</h1>
         <p className="mt-4 max-w-[68ch] font-serif text-xl leading-8">{decision}</p>
 
+        <Headline guide={guide} />
+        <Handoff />
+
         <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Guide path">
           <PathButton selected={view === "decide"} onClick={() => setView("decide")}>
             Managed auth
@@ -289,11 +292,14 @@ function PathButton({
   );
 }
 
-function DecideBody({ guide, onRegister }: { guide: GuideDetail; onRegister: () => void }) {
-  const steps = itemsFor(guide.steps, "decide");
-  const blockers = itemsFor(guide.blockers, "decide");
-  const humans = itemsFor(guide.human_actions, "decide");
-  const gap = gapSentence(guide);
+function headlineClaim(claim: Claim, fallback: string): Claim {
+  if (isStated(claim)) {
+    return claim;
+  }
+  return { value: fallback, status: "unknown", note: claim.note, source_url: claim.source_url };
+}
+
+function Headline({ guide }: { guide: GuideDetail }) {
   const setup = {
     value: guide.setup_path.label,
     status: guide.setup_path.status,
@@ -301,21 +307,60 @@ function DecideBody({ guide, onRegister }: { guide: GuideDetail; onRegister: () 
     source_url: guide.setup_path.source_url,
   };
   const facts = [
+    {
+      label: "Difficulty",
+      claim: headlineClaim(guide.difficulty, "The cited pages do not rate how hard this is."),
+    },
+    {
+      label: "Hands-on work",
+      claim: headlineClaim(guide.active_effort, "The cited pages do not say how long the steps take."),
+    },
+    {
+      label: "Wait for a first connection",
+      claim: headlineClaim(guide.approval_wait, "The cited pages do not establish how long a first connection waits."),
+    },
     statedLabel(guide.setup_path.label, guide.setup_path.status) ? { label: "Setup path", claim: setup } : null,
-    isStated(guide.active_effort) ? { label: "Hands-on work", claim: guide.active_effort } : null,
-    isStated(guide.approval_wait) ? { label: "Wait for a first connection", claim: guide.approval_wait } : null,
   ].filter((fact) => fact !== null);
+  const gap = gapSentence(guide);
   return (
     <>
-      {facts.length > 0 ? (
-        <dl className="mt-8 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
-          {facts.map((fact) => (
-            <Meta key={fact.label} label={fact.label} claim={fact.claim} />
-          ))}
-        </dl>
-      ) : null}
+      <dl className="mt-8 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2">
+        {facts.map((fact) => (
+          <Meta key={fact.label} label={fact.label} claim={fact.claim} />
+        ))}
+      </dl>
       {gap ? <p className="mt-4 max-w-[68ch] text-sm leading-6 text-muted">{gap}</p> : null}
+    </>
+  );
+}
 
+function Handoff() {
+  return (
+    <section className="mt-8 grid gap-px border border-line bg-line sm:grid-cols-2" aria-label="Who does what">
+      <div className="bg-raised p-5">
+        <h2 className="font-serif text-2xl">Already collected</h2>
+        <p className="mt-2 text-sm leading-6">
+          The sources, the redirect URI when a page printed one, the ordered steps, and the checklist. No OAuth app
+          was created, no client secret was stored, and no review was submitted.
+        </p>
+      </div>
+      <div className="bg-raised p-5">
+        <h2 className="font-serif text-2xl">You take over</h2>
+        <p className="mt-2 text-sm leading-6">
+          Create the app in the provider console, keep the client secret, and submit verification or Marketplace
+          review when you need a public listing. On managed auth, a person still has to approve the consent screen.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function DecideBody({ guide, onRegister }: { guide: GuideDetail; onRegister: () => void }) {
+  const steps = itemsFor(guide.steps, "decide");
+  const blockers = itemsFor(guide.blockers, "decide");
+  const humans = itemsFor(guide.human_actions, "decide");
+  return (
+    <>
       {isStated(guide.composio.managed) ? (
         <section className="mt-10 border border-line bg-raised p-5 sm:p-6">
           <h2 className="font-serif text-2xl">Managed auth</h2>

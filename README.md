@@ -1,13 +1,18 @@
 # Field Guide
 
-A local OAuth setup library for Composio. It shows the work required to configure a provider app, whether Composio managed auth is enough, what can block a launch, and which steps need a person.
+An OAuth setup library for Composio. It shows the work required to configure a provider app, whether Composio managed auth is enough, what can block a launch, and which steps a person still has to do.
+
+**Hosted app:** https://field-guide.onrender.com
+
+That address serves the library and the API. Research is on when the host has both API keys. A free Render service sleeps after inactivity, and the first request after that can take a minute.
 
 The library runs with no API key. Research runs only when `MODEL_API_KEY` and `SEARCH_API_KEY` are both set. Without them, an unfamiliar app gets an honest “not configured” response and no guide is stored.
 
 ## What was built
 
-- Searchable directory of GitHub, Google Calendar, and Slack.
-- Standalone guide pages at `/guides/github`, `/guides/google-calendar`, and `/guides/slack`.
+- Searchable directory of GitHub, Google Calendar, Slack, and Notion.
+- Standalone guide pages at `/guides/github`, `/guides/google-calendar`, `/guides/slack`, and `/guides/notion`.
+- Each guide opens with difficulty, hands-on work, approval wait, and a split between what was already collected and what you still do.
 - Fields for authentication type, setup path, difficulty, active effort, approval wait, prerequisites, ordered steps, blockers, human actions, sources, confidence, and last-checked date.
 - Every factual field is marked **Documented** (a cited page says it; this project did not run it), **Inferred** (a reading of retrieved pages, not a direct statement), **Unknown** (the pages do not establish it), or **Uncertain** (an editorial label or an open question). **Verified** is reserved for a setup this project has actually executed. Neither the seed nor research uses it.
 - SQLite schema loaded on startup. Re-running the seed replaces guide text in place.
@@ -62,41 +67,30 @@ The test suite mocks search, page fetches, and the model. It does not call a pai
 2. Search `calendar`. Only Google Calendar remains. Clear the search. `not-a-provider` shows an empty library.
 3. Open GitHub, Google Calendar, and Slack from the list, then load http://127.0.0.1:5173/guides/slack directly. Each page lists sources and marks claims. None of them say Verified.
 4. Open Research an app and submit GitHub. The existing guide is returned and is not rewritten.
-5. Submit `Linear` with `https://developers.linear.app`. With both API keys unset, the page says research is not connected and no guide is stored. `http://127.0.0.1/secret` is rejected and does not start a run.
-6. With `MODEL_API_KEY` and `SEARCH_API_KEY` set, submit an app that is not in the library, such as Notion, and include its docs URL. Wait until the run says the guide was saved, then open the guide URL in a new tab. The claims that survived checking show the page they cite. Refresh the API process and open that same URL again.
+5. Submit `Linear`, or `https://linear.app`. A documentation URL is optional. With both API keys unset, the page says research is not connected and no guide is stored. `http://127.0.0.1/secret` is rejected and does not start a run.
+6. Open Notion. That guide was generated on 22 October 2026 from `https://developers.notion.com`, then saved in `backend/app/generated/notion.json` so a restart still serves it. Its approval wait stays unknown because the pages that run read did not state one. With both API keys set, submit an app that is not in the library, such as Linear. A documentation URL is optional. Wait until the run says the guide was saved, then open the guide URL in a new tab.
 
 ## Deploy
 
-Local development is the path above. A hosted copy is two services. This repository was not deployed as part of the write-up below.
-
-Backend, for example a Render web service with root directory `backend`:
+The hosted copy is one Docker web service. The image builds the frontend, then runs the API, and the API serves `index.html` for `/guides/*` and `/research`. Health check path: `/api/health`.
 
 ```bash
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
+docker build -t field-guide .
+docker run --rm -p 8000:8000 -e PORT=8000 field-guide
 ```
 
-Use Python 3.11, 3.12, or 3.13. Set the variables from `.env.example` in the host's environment, not in a committed file. `CORS_ORIGINS` must include the frontend origin, for example `https://field-guide.example.com`. Health check path: `/api/health`.
+Set the variables from `.env.example` in the host's environment, not in a committed file. On Render the service listens on `0.0.0.0:$PORT`.
 
-SQLite lives on the service disk. On a host with an ephemeral filesystem, a redeploy or restart drops researched guides unless the database file is on a persistent disk and `DATABASE_URL` points at that file, for example `sqlite:////var/data/guides.db`. The three seeded guides are written again on startup. A research run that was still `queued` or `running` when the process stopped is marked failed, and that app name can be submitted again.
-
-Frontend, as a static site with root directory `frontend`:
-
-```bash
-npm install
-npm run build
-```
-
-Publish `dist`. The host must serve `index.html` for `/guides/*` and `/research`. Set `VITE_API_BASE_URL` to the public API prefix before the build, for example `https://field-guide-api.example.com/api`. The Vite dev server proxies `/api` and does not need that absolute URL.
+SQLite lives on the service disk. A free instance has an ephemeral filesystem, so a spin-down drops guides that were saved only by a live research run. Startup writes the editorial guides again and reloads `backend/app/generated/notion.json`. A research run that was still `queued` or `running` when the process stopped is marked failed, and that app name can be submitted again.
 
 ## API
 
 | Method | Path | Behavior |
 | --- | --- | --- |
 | GET | `/api/health` | `research` is `configured` or `unavailable`. |
-| GET | `/api/guides?q=&path=` | Directory. `path` is `managed_or_own` or `own_app_unless_confirmed`. The three seeded guides use `managed_or_own`. |
+| GET | `/api/guides?q=&path=` | Directory. `path` is `managed_or_own` or `own_app_unless_confirmed`. GitHub, Google Calendar, and Slack use `managed_or_own`. Notion uses `own_app_unless_confirmed`. |
 | GET | `/api/guides/{slug}` | Full guide. Unknown slugs return 404. |
-| POST | `/api/research-requests` | Validates the name or website. An existing guide returns `guide_exists` and is not rewritten. An unsafe URL returns 422. Without API keys, an unknown app returns 503 `research_unavailable`. With keys, a new app requires `docs_url` (422 `docs_url_required` without one) and returns 202 and a run id. A second submission for the same in-flight app joins that run. |
+| POST | `/api/research-requests` | Validates the name or website. An existing guide returns `guide_exists` and is not rewritten. An unsafe URL returns 422. Without API keys, an unknown app returns 503 `research_unavailable`. With keys, a name or website alone returns 202 and a run id. A documentation URL is optional and is included in the four pages that get read. A second submission for the same in-flight app joins that run. |
 | POST | `/api/guides/{slug}/recheck` | Reads the docs again for a guide that already exists. Requires `docs_url` when research is configured. Saves a candidate and leaves the live guide unchanged. |
 | GET | `/api/guides/{slug}/candidate` | The pending candidate and which fields differ. 404 when nothing is waiting. |
 | POST | `/api/guides/{slug}/candidate/promote` | Replaces the live guide with the candidate. A later startup does not overwrite that promoted guide with the seed. |
@@ -120,7 +114,7 @@ Pages are fetched with `trust_env` off, so `HTTP_PROXY` cannot point the reader 
 
 ## Evidence
 
-Seeded guides were written from the pages in `docs/provider-research.md`, checked on 21 October 2026. Their source list is the citation panel on the guide. Individual seeded sentences are not each tied to one URL. A researched guide is different: a claim is stored only after it cites a page fetched for that run, and the guide shows that page's URL on the claim. The research run also stores the page title, retrieval time, and the claim keys that page supports.
+Seeded guides for GitHub, Google Calendar, and Slack were written from the pages in `docs/provider-research.md`, checked on 21 October 2026. Their source list is the citation panel on the guide. Individual seeded sentences are not each tied to one URL. Notion is a researched guide from a run on 22 October 2026 that started with `https://developers.notion.com`. A claim on that guide is stored only after it cites a page fetched for that run, and the guide shows that page's URL on the claim. The run did not establish difficulty, hands-on time, or an approval wait, so those fields stay unknown. Most of the saved steps cite `https://composio.dev/auth/notion`. The research run also stores the page title, retrieval time, and the claim keys that page supports.
 
 **Documented** means the cited page states the claim and this project did not run it. **Inferred** means the wording is a reading of the retrieved pages, not a direct statement. **Unknown** means those pages do not establish it. **Uncertain** is an editorial label or an open question, including difficulty and hands-on duration, which the providers do not publish as a rating or a measured time. **Verified** would mean this project executed the setup. Nothing in the seed or the research pipeline uses it.
 

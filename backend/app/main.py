@@ -2,14 +2,53 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import load_settings
 from app.database import bind_database
 from app.research.runtime import build_research
 from app.routers import guides, research
 from app.seed import init_db, seed_database
+
+
+def _frontend_dist() -> Path | None:
+    override = os.environ.get("STATIC_DIR", "").strip()
+    dist = Path(override).resolve() if override else Path(__file__).resolve().parents[2] / "frontend" / "dist"
+    return dist if (dist / "index.html").is_file() else None
+
+
+def _mount_frontend(app: FastAPI, dist: Path) -> None:
+    """Serve the built SPA, including direct loads of /guides/* and /research."""
+
+    assets = dist / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets), name="assets")
+    index = dist / "index.html"
+
+    def page(full_path: str) -> FileResponse:
+        if full_path:
+            candidate = (dist / full_path).resolve()
+            try:
+                candidate.relative_to(dist)
+            except ValueError:
+                return FileResponse(index)
+            if candidate.is_file():
+                return FileResponse(candidate)
+        return FileResponse(index)
+
+    @app.get("/", include_in_schema=False)
+    def frontend_index() -> FileResponse:
+        return page("")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def frontend_page(full_path: str) -> FileResponse:
+        return page(full_path)
 
 
 def create_app() -> FastAPI:
@@ -41,6 +80,10 @@ def create_app() -> FastAPI:
     def health(request: Request) -> dict[str, str]:
         configured = bool(request.app.state.research.configured)
         return {"status": "ok", "research": "configured" if configured else "unavailable"}
+
+    dist = _frontend_dist()
+    if dist is not None:
+        _mount_frontend(app, dist)
 
     return app
 

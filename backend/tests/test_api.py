@@ -30,9 +30,9 @@ def test_directory_lists_three_distinct_guides(client: TestClient):
     response = client.get("/api/guides")
     assert response.status_code == 200
     body = response.json()
-    assert body["count"] == 3
+    assert body["count"] == 4
     slugs = [guide["slug"] for guide in body["guides"]]
-    assert slugs == ["github", "google-calendar", "slack"]
+    assert slugs == ["github", "google-calendar", "notion", "slack"]
     assert all(guide["tested"] is False for guide in body["guides"])
     assert {guide["auth_type"]["value"] for guide in body["guides"]} == {"OAuth 2.0"}
 
@@ -53,12 +53,12 @@ def test_search_is_case_insensitive_and_empty_query_is_honest(client: TestClient
     assert missing.json() == {"guides": [], "count": 0}
 
     blank = client.get("/api/guides", params={"q": "   "})
-    assert blank.json()["count"] == 3
+    assert blank.json()["count"] == 4
 
 
 def test_setup_path_filter(client: TestClient):
     own_app = client.get("/api/guides", params={"path": "own_app_unless_confirmed"})
-    assert own_app.json() == {"guides": [], "count": 0}
+    assert [guide["slug"] for guide in own_app.json()["guides"]] == ["notion"]
 
     managed = client.get("/api/guides", params={"path": "managed_or_own"})
     assert [guide["slug"] for guide in managed.json()["guides"]] == [
@@ -118,13 +118,13 @@ def test_provider_waits_are_not_invented(client: TestClient):
     calendar = client.get("/api/guides/google-calendar").json()
 
     github_wait = github["approval_wait"]["value"].lower()
-    assert github_wait.startswith("unknown.")
+    assert github_wait.startswith("no staff-review wait was found.")
     assert "business day" not in github_wait
     assert "week" not in github_wait
     assert github["setup_path"]["value"] == "managed_or_own"
 
     slack_wait = slack["approval_wait"]["value"]
-    assert "Unknown for creating a Slack app" in slack_wait
+    assert slack_wait.startswith("Marketplace review is optional.")
     assert "Marketplace review is not required to create an app" in slack_wait
     assert "up to 10 business days" in slack_wait
     assert "up to 10 weeks for new submissions" in slack_wait
@@ -167,25 +167,35 @@ def test_provider_waits_are_not_invented(client: TestClient):
 
 
 def test_unknown_guide_is_not_found(client: TestClient):
-    response = client.get("/api/guides/notion")
+    response = client.get("/api/guides/not-a-real-app")
     assert response.status_code == 404
     assert response.json()["detail"]["code"] == "not_found"
+
+
+def test_notion_snapshot_is_the_generated_guide(client: TestClient):
+    guide = client.get("/api/guides/notion").json()
+    assert guide["origin"] == "researched"
+    assert guide["tested"] is False
+    assert guide["approval_wait"]["status"] == "unknown"
+    assert "backend.composio.dev" in guide["composio"]["redirect_uri"]["value"]
+    assert any(step["title"] == "Configure the new integration" for step in guide["steps"])
+    assert guide["steps"][0]["source_url"]
 
 
 def test_research_is_unavailable_and_creates_nothing(client: TestClient):
     before = client.get("/api/guides").json()["count"]
     response = client.post(
         "/api/research-requests",
-        json={"app_name": "  Notion  ", "docs_url": "https://developers.notion.com"},
+        json={"app_name": "  Linear  ", "docs_url": "https://developers.linear.app"},
     )
     assert response.status_code == 503
     body = response.json()
     assert body["code"] == "research_unavailable"
     assert body["guide_created"] is False
-    assert body["app_name"] == "Notion"
+    assert body["app_name"] == "Linear"
     assert "model provider" in body["message"]
     assert client.get("/api/guides").json()["count"] == before
-    assert client.get("/api/guides/notion").status_code == 404
+    assert client.get("/api/guides/linear").status_code == 404
 
 
 def test_research_rejects_blank_names_and_bad_urls(client: TestClient):
@@ -214,4 +224,4 @@ def test_seed_is_idempotent(tmp_path, monkeypatch):
     with TestClient(application) as client:
         github = client.get("/api/guides/github").json()
         assert len(github["steps"]) == EXPECTED_COUNTS["github"]["steps"]
-        assert client.get("/api/guides").json()["count"] == 3
+        assert client.get("/api/guides").json()["count"] == 4

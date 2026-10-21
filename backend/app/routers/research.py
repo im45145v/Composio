@@ -69,17 +69,6 @@ def submit_research(
         return JSONResponse(status_code=200, content=payload.model_dump(mode="json"))
 
     deps = request.app.state.research
-    if deps.configured and not identity.docs_url:
-        raise HTTPException(
-            status_code=422,
-            detail={
-                "code": "docs_url_required",
-                "message": (
-                    "Add the documentation URL. Research reads at most four pages, "
-                    "and a URL keeps those pages on this app. No guide was saved."
-                ),
-            },
-        )
     if not deps.configured:
         payload = ResearchUnavailable(
             code="research_unavailable",

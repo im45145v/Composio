@@ -30,10 +30,12 @@ export function claimText(value: string | null | undefined): string {
 const SCHEMA_LEAK = /\b(this json|json object|managed_or_own|setup_path_value|setup_path)\b/i;
 
 export function readableDecision(decision: string, summary: string): string {
-  if (SCHEMA_LEAK.test(decision) && summary.trim() && !SCHEMA_LEAK.test(summary)) {
+  const trimmed = decision.replace(/\s*The passages support\b[\s\S]*$/i, "").trim();
+  const chosen = trimmed || decision;
+  if (SCHEMA_LEAK.test(chosen) && summary.trim() && !SCHEMA_LEAK.test(summary)) {
     return summary.trim();
   }
-  return decision;
+  return chosen;
 }
 
 export function isStated(claim: { value: string | null; status: ClaimStatus }): boolean {
@@ -104,6 +106,20 @@ export function gapSentence(guide: GuideDetail): string | null {
   }
   const last = missing[missing.length - 1];
   return `The cited pages do not establish ${missing.slice(0, -1).join(", ")} or ${last}.`;
+}
+
+export function leadFact(value: string | null | undefined, fallback: string, sentences = 2, max = 220): string {
+  if (!value || value.trim().toLowerCase() === "unknown") {
+    return fallback;
+  }
+  return opening(value, sentences, max);
+}
+
+export function opening(value: string | null | undefined, sentences = 2, max = 240): string {
+  const text = claimText(value).replace(/\s+/g, " ").trim();
+  const parts = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const joined = parts.slice(0, sentences).join(" ");
+  return previewClaim(joined, max);
 }
 
 export function previewClaim(value: string | null | undefined, max = 110): string {

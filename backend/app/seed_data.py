@@ -87,24 +87,22 @@ GUIDES: list[dict] = [
         },
         "active_effort": {
             "value": (
-                "Duration is unknown. GitHub and Composio list human steps and do not state how long they take. "
-                "If managed auth is used, current Composio docs say there is no OAuth app registration. The remaining "
-                "step they describe is the end user consenting to the Composio-named app. If you register your own "
-                "OAuth app, the documented work is the creation form, copying the client ID and client secret into a "
-                "custom auth config, and the user's authorization. Organization-owner approval, when that org has "
-                "access restrictions enabled, has steps and no published duration."
+                "Managed auth is the end user consenting to the Composio-named app, with no registration form. "
+                "Your own OAuth app is one creation form, then copying the client ID and client secret into a custom "
+                "auth config, then the user's authorization. GitHub and Composio do not say how long either path takes. "
+                "Organization-owner approval, when that org has access restrictions enabled, has steps and no published duration."
             ),
             "status": "uncertain",
             "note": "Unverified editorial inventory of the documented click-path. No minute estimate is given.",
         },
         "approval_wait": {
             "value": (
-                "Unknown. No fetched GitHub page gives a staff-review wait before the owner, or other users, can "
-                "authorize a new OAuth app. The creation guide ends at Register application and describes no review "
-                "queue. When an organization has OAuth app access restrictions enabled, a member requests approval "
-                "and an owner grants access. That organization step has no published duration, and it does not apply "
-                "to every organization. The legacy Composio sentence that getting OAuth approvals takes time does "
-                "not name GitHub and does not give a duration."
+                "No staff-review wait was found. The creation guide ends at Register application, and no fetched "
+                "GitHub page gives a duration before the owner, or other users, can authorize a new OAuth app. "
+                "When an organization has OAuth app access restrictions enabled, a member requests approval and an "
+                "owner grants access. That organization step has no published duration, and it does not apply to every "
+                "organization. The legacy Composio sentence that getting OAuth approvals takes time does not name "
+                "GitHub and does not give a duration."
             ),
             "status": "documented",
             "note": "Documented absence of a staff-review figure. The conditional organization step was not timed.",
@@ -401,11 +399,9 @@ GUIDES: list[dict] = [
         },
         "active_effort": {
             "value": (
-                "Duration is unknown for creating an app, installing it on the owning workspace, and activating unlisted "
-                "public distribution. Slack and Composio list those steps and do not time them. Managed auth, as the Slack "
-                "how-to describes it, is adding the toolkit, choosing Composio Managed, reviewing scopes, creating the auth "
-                "config, and having a user Allow the install on a workspace that permits the app. Marketplace review is a "
-                "separate optional submission. Only that review has published upper bounds."
+                "One workspace is a dashboard install. Any other workspace adds OAuth and public distribution. "
+                "Only Marketplace review has a published bound, and that review is optional. Slack and Composio do "
+                "not time app creation, the install on the owning workspace, or unlisted public distribution."
             ),
             "status": "uncertain",
             "note": (
@@ -415,13 +411,12 @@ GUIDES: list[dict] = [
         },
         "approval_wait": {
             "value": (
-                "Unknown for creating a Slack app, installing it on the workspace that owns it, or activating unlisted "
-                "public distribution. No official duration was found for those. Marketplace review is not required to "
-                "create an app or to install it on the owning workspace. For Marketplace review only, Slack says the "
-                "preliminary part takes up to 10 business days to receive feedback, and the functional review takes up "
-                "to 10 weeks for new submissions and 6 weeks for published apps resubmitting changes. Turnaround can "
-                "vary with volume, and Slack says it cannot skip or accelerate review. Composio's statement that it is "
-                "working on Marketplace review for the managed Slack app has no duration."
+                "Marketplace review is optional. When you submit, Slack's bound is up to 10 business days to receive "
+                "feedback, and the functional review takes up to 10 weeks for new submissions and 6 weeks for published "
+                "apps resubmitting changes. Marketplace review is not required to create an app or to install it on the "
+                "owning workspace. No official duration was found for creating a Slack app, installing it on the owning "
+                "workspace, or activating unlisted public distribution. Slack says it cannot skip or accelerate review. "
+                "Composio's statement that it is working on Marketplace review for the managed Slack app has no duration."
             ),
             "status": "documented",
             "note": (
@@ -741,24 +736,23 @@ GUIDES: list[dict] = [
         },
         "active_effort": {
             "value": (
-                "Duration is unknown. The pages list steps and do not time them. Managed auth, as Composio describes it, "
-                "needs no Google Cloud project. The user consents to Composio's app. An own client adds a Cloud project, "
-                "consent-screen branding, the Calendar API on that project, a web client, and a redirect that matches "
-                "Composio. Those steps were not timed, and they were not run."
+                "Managed auth needs no Google Cloud project. The user consents to Composio's app. An own client adds "
+                "a Cloud project, consent-screen branding, the Calendar API on that project, a web client, and a "
+                "redirect that matches Composio. The pages list those steps and do not time them."
             ),
             "status": "uncertain",
             "note": "Unverified editorial inventory of the documented steps. No minute estimate is given.",
         },
         "approval_wait": {
             "value": (
-                "The wait is otherwise unknown. Official pages disagree on sensitive-scope review timing, and those "
-                "figures apply only when that review is actually required. The sensitive-scope page says the process "
-                "typically takes 3-5 business days. The OAuth verification FAQ lists Sensitive Scope Verification as "
-                "10 business days and says the estimates are not guaranteed. Which Calendar scope URIs need that "
-                "review was not found on the public scope tables. Calendar scopes were absent from the restricted-scope "
-                "list that was fetched, so restricted-scope review durations are not used as a Calendar wait. No official "
-                "page gave a wait for enabling the Calendar API or for creating the OAuth client. None of these figures "
-                "was tested, and none of them is a duration that Calendar verification always takes."
+                "Verification is not always required. When sensitive-scope review applies, the sensitive-scope page "
+                "says the process typically takes 3-5 business days, and the OAuth verification FAQ lists Sensitive "
+                "Scope Verification as 10 business days. The estimates are not guaranteed. Which Calendar scope URIs "
+                "need that review was not found on the public scope tables. Calendar scopes were absent from the "
+                "restricted-scope list that was fetched, so restricted-scope review durations are not used as a "
+                "Calendar wait. No official page gave a wait for enabling the Calendar API or for creating the OAuth "
+                "client. The applicable Calendar wait is otherwise unknown. None of these figures was tested, and "
+                "none of them is a duration that Calendar verification always takes."
             ),
             "status": "uncertain",
             "note": (

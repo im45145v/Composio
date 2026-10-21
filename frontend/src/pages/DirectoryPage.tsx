@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ApiError, fetchGuides } from "../api";
+import { ClaimMark } from "../components/ClaimMark";
 import { EmptyBlock, ErrorBlock, LoadingBlock } from "../components/StatusBlock";
-import { SETUP_FILTERS, formatCheckedDate, previewClaim, readableDecision, showsWait, statedLabel } from "../content";
+import { SETUP_FILTERS, formatCheckedDate, leadFact, markFor, previewClaim, readableDecision, statedLabel } from "../content";
 import type { GuideSummary } from "../types";
 
 type LoadState =
@@ -88,10 +89,9 @@ export function DirectoryPage() {
         Can you connect it with managed auth?
       </h1>
       <p className="mt-4 max-w-2xl text-[15px] leading-7 text-muted">
-        Each guide opens on that decision: use Composio managed auth, or register your own app, and what
-        can stall a launch. GitHub, Google Calendar, and Slack were written from provider and Composio
-        pages. A researched guide is added only when the pages support one. Nothing here was installed
-        or approved by this project.
+        Each card leads with difficulty, hands-on work, and the approval wait. Open a guide for the
+        steps, what can stall a launch, and the split between what was already collected and what you
+        still have to do. Nothing here was installed or approved by this project.
       </p>
 
       <form
@@ -159,7 +159,7 @@ export function DirectoryPage() {
               path === "own_app_unless_confirmed" && !query.trim()
                 ? "No guide in this library requires your own app before managed auth is ruled out. GitHub, Google Calendar, and Slack can start on managed auth."
                 : filtered
-                  ? `Nothing in the library matches “${query || "that path"}”. GitHub, Google Calendar, and Slack are the seeded guides.`
+                  ? `Nothing in the library matches “${query || "that path"}”. GitHub, Google Calendar, Slack, and Notion are the guides in the library.`
                   : "The database has no guides. Start the API so it can load the seed data."
             }
             action={
@@ -220,14 +220,38 @@ export function DirectoryPage() {
                     <p className="mt-2 max-w-3xl text-[15px] leading-7">
                       {previewClaim(readableDecision(guide.decision, guide.summary), 220)}
                     </p>
+                    <dl className="mt-3 grid gap-2 text-sm leading-6 sm:grid-cols-3">
+                      <div>
+                        <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Difficulty</dt>
+                        <dd className="mt-1">
+                          {leadFact(guide.difficulty.value, "The cited pages do not rate how hard this is.", 1, 120)}
+                          {markFor(guide.difficulty.status) ? (
+                            <span className="ml-2">
+                              <ClaimMark status={markFor(guide.difficulty.status) ?? "uncertain"} />
+                            </span>
+                          ) : null}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Hands-on</dt>
+                        <dd className="mt-1">
+                          {leadFact(guide.active_effort.value, "The cited pages do not say how long the steps take.", 2, 180)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Approval wait</dt>
+                        <dd className="mt-1">
+                          {leadFact(
+                            guide.approval_wait.value,
+                            "The cited pages do not establish how long a first connection waits.",
+                            2,
+                            220,
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
                     {statedLabel(guide.setup_path.label, guide.setup_path.status) ? (
-                      <p className="mt-3 text-sm">{guide.setup_path.label}</p>
-                    ) : null}
-                    {showsWait(guide.approval_wait) ? (
-                      <p className="mt-2 max-w-3xl text-sm leading-6">
-                        <span className="text-muted">Wait for a first connection · </span>
-                        {previewClaim(guide.approval_wait.value, 160)}
-                      </p>
+                      <p className="mt-3 text-sm text-muted">{guide.setup_path.label}</p>
                     ) : null}
                   </Link>
                 </li>
