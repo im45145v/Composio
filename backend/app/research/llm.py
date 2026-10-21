@@ -15,9 +15,30 @@ class ModelClient(Protocol):
 
 
 def _model_status(status: int) -> ModelError:
+    if status in {401, 403}:
+        return ModelError(
+            "The model API rejected the API key. Check MODEL_API_KEY and MODEL_PROVIDER.",
+            "model_failed",
+        )
     if status in {429, 500, 502, 503, 504}:
         return TransientFailure("The model API did not respond.", "model_failed")
     return ModelError("The model API rejected the request.", "model_failed")
+
+
+def _openai_text(content: object) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict):
+                text = block.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+        return "".join(parts)
+    return ""
 
 
 def _text_from_openai(payload: object) -> str:
@@ -25,9 +46,10 @@ def _text_from_openai(payload: object) -> str:
         content = payload["choices"][0]["message"]["content"]  # type: ignore[index]
     except (KeyError, IndexError, TypeError) as exc:
         raise ModelError("The model API returned an unreadable response.", "model_failed") from exc
-    if not isinstance(content, str) or not content.strip():
+    text = _openai_text(content).strip()
+    if not text:
         raise ModelError("The model API returned an empty response.", "model_failed")
-    return content
+    return text
 
 
 def _text_from_anthropic(payload: object) -> str:

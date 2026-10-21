@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 import pytest
 from fastapi.testclient import TestClient
 
-from app.research.errors import ModelError, SearchError
+from app.research.errors import ModelError, SearchError, TransientFailure
 from app.research.reader import FetchedPage
 from app.research.search import SearchHit
 
@@ -229,6 +229,8 @@ def test_successful_run_persists_a_shareable_guide(research_app):
         urls = [source["url"] for source in payload["sources"]]
         assert EXAMPLE_DOCS in urls
         assert COMPOSIO_DOCS in urls
+        names = [item["name"] for item in client.get("/api/guides").json()["guides"]]
+        assert "Example" in names
         run = client.get(f"/api/research-runs/{body['run_id']}").json()
         assert run["status"] == "completed"
         assert run["evidence"]
@@ -525,6 +527,68 @@ def test_restart_releases_a_dead_research_lock(tmp_path, monkeypatch):
         assert response.json()["run_id"] != "dead-run"
         assert response.json()["guide_created"] is True
         assert client.get("/api/guides/example").status_code == 200
+
+
+def test_fenced_model_json_is_validated_and_saved(research_app):
+    research_app.state.fakes["model"].payload = "Here is the guide:\n```json\n" + json.dumps(valid_draft()) + "\n```"
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Fenced"})
+        assert response.status_code == 202
+        assert response.json()["guide_created"] is True
+        guide = client.get("/api/guides/fenced")
+        assert guide.status_code == 200
+        assert guide.json()["auth_type"]["source_url"] == EXAMPLE_DOCS
+
+
+def test_unsupported_inferred_step_is_not_stored(research_app):
+    draft = valid_draft()
+    draft["steps"].append(
+        {
+            "title": "Invented approval",
+            "body": "The review board always approves this integration within one hour.",
+            "status": "inferred",
+            "note": None,
+            "evidence_ids": ["e1"],
+        }
+    )
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        assert response.status_code == 202
+        guide = client.get("/api/guides/example").json()
+        bodies = " ".join(step["body"] for step in guide["steps"])
+        assert "review board" not in bodies
+        assert "Create an OAuth app in the developer settings." in bodies
+
+
+def test_unreadable_pages_do_not_save_a_guide(research_app):
+    class DeadReader:
+        def read(self, url: str) -> FetchedPage:
+            raise TransientFailure("The page request timed out.", "page_timeout")
+
+    research_app.state.research = replace(research_app.state.research, reader=DeadReader())
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "insufficient_evidence"
+        assert "could not be read" in run["message"]
+        events = read_events(client, response.json()["run_id"])
+        assert any("timed out" in event["data"]["message"] for event in events)
+        assert client.get("/api/guides/example").status_code == 404
+
+
+def test_provider_rejection_is_shown_on_the_run(research_app):
+    research_app.state.fakes["model"].error = ModelError(
+        "The model API rejected the API key. Check MODEL_API_KEY and MODEL_PROVIDER.",
+        "model_failed",
+    )
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["error_code"] == "model_failed"
+        assert "MODEL_API_KEY" in run["message"]
+        assert "No guide was saved." in run["message"]
+        assert client.get("/api/guides/example").status_code == 404
 
 
 def test_timeout_fails_the_run(research_app):

@@ -98,6 +98,15 @@ export interface ResearchAccepted {
 
 export type ResearchSubmission = ResearchUnavailable | GuideExists | ResearchAccepted;
 
+export interface ResearchRunStatus {
+  id: string;
+  status: string;
+  message: string | null;
+  error_code: string | null;
+  guide_slug: string | null;
+  guide_created: boolean;
+}
+
 export interface ResearchProgress {
   id: number;
   kind: "stage" | "finding" | "terminal";

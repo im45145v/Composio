@@ -2,15 +2,23 @@
 
 from __future__ import annotations
 
+import ipaddress
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 
 from app.research.errors import ReaderError, TransientFailure, UnsafeURL, retry
-from app.research.safety import Resolver, SystemResolver, assert_resolves_public, screen_url
+from app.research.safety import (
+    Resolver,
+    SystemResolver,
+    assert_resolves_public,
+    ip_literal,
+    is_public_ip,
+    screen_url,
+)
 
 REDIRECTS = {301, 302, 303, 307, 308}
 USER_AGENT = "FieldGuideResearch/0.2"
@@ -74,6 +82,23 @@ def _decode(body: bytes, content_type: str) -> str:
     return body.decode(charset, errors="replace")
 
 
+def _connection_url(url: str, ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> str:
+    parsed = urlsplit(url)
+    host = f"[{ip}]" if isinstance(ip, ipaddress.IPv6Address) else str(ip)
+    path = parsed.path or "/"
+    query = f"?{parsed.query}" if parsed.query else ""
+    return f"{parsed.scheme}://{host}{path}{query}"
+
+
+def _choose_address(
+    addresses: list[ipaddress.IPv4Address | ipaddress.IPv6Address],
+) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
+    for ip in addresses:
+        if isinstance(ip, ipaddress.IPv4Address):
+            return ip
+    return addresses[0]
+
+
 def extract_text(body: bytes, content_type: str, max_chars: int) -> tuple[str, str]:
     if "\x00" in body.decode("latin-1"):
         raise ReaderError("The page is not a text document.", "unsupported_type")
@@ -131,24 +156,44 @@ class PageReader:
 
         return retry(once)
 
-    def _fetch(self, url: str) -> FetchedPage:
+    def _pinned_request(self, logical_url: str) -> tuple[str, dict[str, str], dict[str, str] | None]:
+        """Connect to an address from this lookup. A later DNS answer cannot retarget it."""
+
+        parsed = urlsplit(logical_url)
+        host = parsed.hostname or ""
         headers = {"User-Agent": USER_AGENT, "Accept": "text/html,text/plain,application/xhtml+xml"}
+        literal = ip_literal(host)
+        if literal is not None:
+            if not is_public_ip(literal):
+                raise UnsafeURL("That address is not a public website.", code="blocked_address")
+            return logical_url, headers, None
+        addresses = self._resolver.resolve(host)
+        if any(not is_public_ip(ip) for ip in addresses):
+            raise UnsafeURL("That host resolves to a non-public address.", code="blocked_address")
+        headers["Host"] = host
+        extensions = {"sni_hostname": host} if parsed.scheme == "https" else None
+        return _connection_url(logical_url, _choose_address(addresses)), headers, extensions
+
+    def _fetch(self, url: str) -> FetchedPage:
+        logical = url
         with httpx.Client(
             timeout=self._timeout,
             transport=self._transport,
             trust_env=False,
             follow_redirects=False,
         ) as client:
-            current = url
             for _hop in range(self._max_redirects + 1):
-                assert_resolves_public(current, self._resolver)
-                with client.stream("GET", current, headers=headers) as response:
+                target, headers, extensions = self._pinned_request(logical)
+                request_args: dict[str, object] = {"headers": headers}
+                if extensions is not None:
+                    request_args["extensions"] = extensions
+                with client.stream("GET", target, **request_args) as response:
                     if response.status_code in REDIRECTS:
                         location = response.headers.get("location")
                         if not location:
                             raise ReaderError("The page redirect had no destination.", "bad_redirect")
                         try:
-                            current = screen_url(urljoin(str(response.url), location))
+                            logical = screen_url(urljoin(logical, location))
                         except UnsafeURL as exc:
                             raise UnsafeURL(
                                 "The page redirected to a non-public address.",
@@ -167,7 +212,7 @@ class PageReader:
                         body.extend(chunk)
                     title, text = extract_text(bytes(body), content_type, self._max_chars)
                     return FetchedPage(
-                        url=current,
+                        url=logical,
                         title=title,
                         text=text,
                         retrieved_at=datetime.now(timezone.utc),

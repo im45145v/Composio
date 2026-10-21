@@ -1,4 +1,4 @@
-import type { GuideDetail, GuideListResponse, ResearchSubmission } from "./types";
+import type { GuideDetail, GuideListResponse, ResearchRunStatus, ResearchSubmission } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
@@ -105,4 +105,20 @@ function isResearchSubmission(status: number, body: unknown): body is ResearchSu
 
 export function researchEventsUrl(runId: string): string {
   return `${API_BASE}/research-runs/${encodeURIComponent(runId)}/events`;
+}
+
+export async function fetchResearchRun(runId: string): Promise<ResearchRunStatus> {
+  const response = await fetch(`${API_BASE}/research-runs/${encodeURIComponent(runId)}`);
+  const body = await readBody(response);
+  if (!response.ok || !isRecord(body) || typeof body.status !== "string") {
+    throw new ApiError(response.status, "The research run could not be loaded.");
+  }
+  return {
+    id: typeof body.id === "string" ? body.id : runId,
+    status: body.status,
+    message: typeof body.message === "string" ? body.message : null,
+    error_code: typeof body.error_code === "string" ? body.error_code : null,
+    guide_slug: typeof body.guide_slug === "string" ? body.guide_slug : null,
+    guide_created: body.guide_created === true,
+  };
 }

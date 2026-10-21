@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ipaddress
+from urllib.parse import urlsplit
 
 import httpx
 import pytest
@@ -59,10 +60,10 @@ def test_screen_blocks_private_metadata_and_unsupported_schemes():
 
 
 def test_reader_does_not_follow_a_redirect_to_a_private_address():
-    requested: list[str] = []
+    requested: list[httpx.Request] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
-        requested.append(str(request.url))
+        requested.append(request)
         return httpx.Response(302, headers={"location": "http://127.0.0.1/secret"})
 
     reader = PageReader(
@@ -73,8 +74,42 @@ def test_reader_does_not_follow_a_redirect_to_a_private_address():
     with pytest.raises(UnsafeURL) as caught:
         reader.read("https://docs.example/oauth")
     assert caught.value.code == "unsafe_redirect"
-    assert requested == ["https://docs.example/oauth"]
-    assert all("127.0.0.1" not in url for url in requested)
+    assert [str(request.url) for request in requested] == ["https://93.184.216.34/oauth"]
+    assert requested[0].headers["host"] == "docs.example"
+    assert requested[0].extensions["sni_hostname"] == "docs.example"
+    assert all("127.0.0.1" not in str(request.url) for request in requested)
+
+
+def test_reader_pins_each_redirect_and_keeps_the_public_url():
+    requested: list[tuple[str, str | None]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append((str(request.url), request.headers.get("host")))
+        host = urlsplit(str(request.url)).hostname
+        if host == "93.184.216.34" and request.url.path == "/oauth":
+            return httpx.Response(302, headers={"location": "/start"})
+        if host == "93.184.216.34":
+            return httpx.Response(302, headers={"location": "https://developer.vendor.example/docs"})
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/plain"},
+            text="Create an OAuth app in the developer settings.",
+        )
+
+    reader = PageReader(
+        resolver=StaticResolver(
+            {"docs.example": "93.184.216.34", "developer.vendor.example": "1.1.1.1"}
+        ),
+        transport=httpx.MockTransport(handler),
+    )
+    page = reader.read("https://docs.example/oauth")
+    assert page.url == "https://developer.vendor.example/docs"
+    assert "Create an OAuth app" in page.text
+    assert requested == [
+        ("https://93.184.216.34/oauth", "docs.example"),
+        ("https://93.184.216.34/start", "docs.example"),
+        ("https://1.1.1.1/docs", "developer.vendor.example"),
+    ]
 
 
 def test_reader_skips_script_text_and_limits_size():
@@ -93,6 +128,7 @@ def test_reader_skips_script_text_and_limits_size():
         resolver=StaticResolver({"docs.example": "93.184.216.34"}),
         transport=httpx.MockTransport(handler),
     ).read("https://docs.example/oauth")
+    assert page.url == "https://docs.example/oauth"
     assert page.title == "OAuth"
     assert "Create an OAuth app." in page.text
     assert "alert" not in page.text

@@ -23,6 +23,11 @@ class SearchClient(Protocol):
 
 
 def _status_error(status: int, provider: str) -> SearchError:
+    if status in {401, 403}:
+        return SearchError(
+            f"The {provider} search provider rejected the API key. Check SEARCH_API_KEY.",
+            "search_failed",
+        )
     if status in {429, 500, 502, 503, 504}:
         return TransientFailure(f"The {provider} search provider did not respond.", "search_failed")
     return SearchError(f"The {provider} search provider rejected the query.", "search_failed")

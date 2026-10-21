@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, researchEventsUrl, submitResearch } from "../api";
+import { ApiError, fetchResearchRun, researchEventsUrl, submitResearch } from "../api";
 import { ErrorBlock } from "../components/StatusBlock";
 import { GUIDE_FIELDS } from "../content";
 import type { ResearchProgress, ResearchUnavailable } from "../types";
@@ -55,10 +55,18 @@ export function ResearchPage() {
       return;
     }
     const source = new EventSource(researchEventsUrl(runId));
+    let closedByUs = false;
+    const stop = () => {
+      closedByUs = true;
+      source.close();
+    };
     const add = (kind: ResearchProgress["kind"]) => (event: MessageEvent<string>) => {
       const progress = parseProgress(kind, event);
       if (!progress) {
         return;
+      }
+      if (kind === "terminal") {
+        stop();
       }
       setState((current) => {
         if (current.status !== "running" || current.runId !== runId) {
@@ -68,7 +76,6 @@ export function ResearchPage() {
           ? current.events
           : [...current.events, progress];
         if (kind === "terminal") {
-          source.close();
           if (progress.status === "completed" || progress.status === "existing_guide") {
             return {
               status: "completed",
@@ -86,7 +93,52 @@ export function ResearchPage() {
     source.addEventListener("stage", add("stage"));
     source.addEventListener("finding", add("finding"));
     source.addEventListener("terminal", add("terminal"));
-    return () => source.close();
+    source.onerror = () => {
+      if (closedByUs) {
+        return;
+      }
+      void fetchResearchRun(runId)
+        .then((run) => {
+          setState((current) => {
+            if (current.status !== "running" || current.runId !== runId) {
+              return current;
+            }
+            if (run.status === "completed" || run.status === "existing_guide") {
+              stop();
+              return {
+                status: "completed",
+                runId,
+                appName: current.appName,
+                slug: run.guide_slug || "",
+                events: current.events,
+              };
+            }
+            if (run.status === "failed" || run.status === "insufficient_evidence") {
+              stop();
+              return {
+                status: "failed",
+                message: run.message || "Research didn't produce a guide.",
+                events: current.events,
+              };
+            }
+            return current;
+          });
+        })
+        .catch(() => {
+          setState((current) => {
+            if (current.status !== "running" || current.runId !== runId) {
+              return current;
+            }
+            stop();
+            return {
+              status: "error",
+              message:
+                "The research progress stream disconnected, and the run status could not be loaded. If a guide was saved, open it from the library.",
+            };
+          });
+        });
+    };
+    return () => stop();
   }, [runId]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -214,12 +266,14 @@ export function ResearchPage() {
                   ? `${state.appName} is already in the library, so the existing guide was left unchanged.`
                   : `${state.appName} now has a stable address from the pages that were read.`}
               </p>
-              <Link
-                to={`/guides/${state.slug}`}
-                className="mt-5 inline-block border border-ink bg-ink px-3 py-2 text-sm text-paper"
-              >
-                Open the guide
-              </Link>
+              {state.slug ? (
+                <Link
+                  to={`/guides/${state.slug}`}
+                  className="mt-5 inline-block border border-ink bg-ink px-3 py-2 text-sm text-paper"
+                >
+                  Open the guide
+                </Link>
+              ) : null}
             </div>
           ) : null}
 

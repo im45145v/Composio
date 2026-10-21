@@ -106,11 +106,11 @@ Guide addresses are the frontend routes above. A static host needs to serve `ind
 
 `MODEL_PROVIDER` is `openai` (default model `gpt-4o-mini`) or `anthropic` (default model `claude-sonnet-4-5`). `SEARCH_PROVIDER` is `tavily` or `brave`. `MODEL_NAME` overrides the model id.
 
-A run searches, fetches public pages, and asks the model to extract a guide from those pages only. Search snippets are not evidence. The model output is checked with Pydantic. Documented claims must cite a retrieved page and overlap its text. URLs and durations must appear in the cited page. If two retrieved pages give different review durations, the wait is stored as unknown and both figures are kept. A guide is saved only when an authentication type, at least one step, and at least one human action survive that check. Each saved claim records the first cited page URL. Output that contains a client secret, API key, or access token is discarded.
+A run searches, fetches public pages, and asks the model to extract a guide from those pages only. Search snippets are not evidence. The model output is checked with Pydantic. A fenced JSON object is accepted; anything that is not the guide schema is rejected. Documented claims must cite a retrieved page and overlap its text. Inferred claims that do not overlap the cited page are dropped. URLs and durations must appear in the cited page. If two retrieved pages give different review durations, the wait is stored as unknown and both figures are kept. A guide is saved only when an authentication type, at least one step, and at least one human action survive that check. Each saved claim records the first cited page URL. Output that contains a client secret, API key, or access token is discarded.
 
 The reader keeps at most `MAX_RESEARCH_PAGES` URLs (default 4). Inside that budget it keeps the caller's documentation URL when one was submitted, the highest-scoring page that is not on `composio.dev`, and the highest-scoring Composio page, then fills the remaining slots by score.
 
-Pages are fetched with `trust_env` off, so `HTTP_PROXY` cannot point the reader at an internal service. Schemes other than http and https, embedded credentials, ports other than 80 and 443, localhost, private and link-local addresses, and cloud metadata addresses are rejected. Redirects are checked again before they are followed. Response bodies are capped and scripts are stripped, not executed.
+Pages are fetched with `trust_env` off, so `HTTP_PROXY` cannot point the reader at an internal service. Schemes other than http and https, embedded credentials, ports other than 80 and 443, localhost, private and link-local addresses, and cloud metadata addresses are rejected. Each request connects to an address from that same public-address check, with the original hostname kept for the Host header and TLS server name. Redirects are checked the same way before they are followed. Response bodies are capped and scripts are stripped, not executed. A rejected search or model key is reported as a configuration failure, and the provider's response body is not stored or shown.
 
 ## Evidence
 
@@ -126,7 +126,7 @@ Approval waits are quoted only where a retrieved page states one. If two retriev
 - JavaScript-only documentation is not executed, so a page that is empty without a browser can come back as unreadable.
 - Contradiction detection covers review durations. It does not settle every kind of disagreement.
 - The fetch budget is four pages. Reserving a provider page and a Composio page does not guarantee that the provider's registration page is the provider page that ranks highest.
-- HTTPS fetches re-resolve the hostname after the public-address check, so a fast DNS rebinding response is still a residual risk.
+- Overlap checks catch claims that do not share wording with the cited page. They do not prove that a paraphrased sentence is entailed by that page.
 - A restart fails an in-flight run and releases that app name. The duplicate lock is still one SQLite row in this process. Two servers writing the same database can race at insert time; the slug unique constraint then keeps the first guide.
 - Seeded GitHub, Google Calendar, and Slack guides are left unchanged by later research, and their claims do not carry a per-sentence source URL.
 - Composio’s managed-OAuth catalog lists those three, and an own OAuth app is optional for them. The live toolkit API was not called, default scopes were not published, and no OAuth flow was executed.

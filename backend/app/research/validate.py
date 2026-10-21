@@ -172,12 +172,15 @@ def _assess(
 
     evidence = _cited_text(evidence_ids, pages)
     compared = value or ""
-    if status == "documented" and compared:
-        if _overlap(compared, evidence) < 0.4:
-            status = "inferred" if _overlap(compared, evidence) > 0 else "unknown"
+    if status in {"documented", "inferred"} and compared:
+        overlap = _overlap(compared, evidence)
+        if overlap == 0 or (status == "documented" and overlap < 0.4):
             note = _append_note(note, "The retrieved pages do not state this in matching language.")
-            if status == "unknown":
+            if overlap == 0:
+                status = "unknown"
                 value = None
+            else:
+                status = "inferred"
     if status == "documented" and not _preferred(evidence_ids, pages):
         status = "inferred"
         note = _append_note(note, "The citation is not an official documentation host.")
@@ -238,11 +241,28 @@ def _apply_wait_conflict(claim: CheckedClaim, pages: dict[str, EvidencePage]) ->
     return CheckedClaim(value=None, status="unknown", note=note, evidence_ids=claim.evidence_ids), note
 
 
+def _json_object(raw: str) -> str:
+    """Take the JSON object out of a fenced or prefaced model response."""
+
+    text = raw.strip()
+    fenced = re.match(r"^```(?:json)?\s*(.*?)\s*```$", text, flags=re.IGNORECASE | re.DOTALL)
+    if fenced:
+        text = fenced.group(1).strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start >= 0 and end > start:
+        return text[start : end + 1]
+    return text
+
+
 def validate_draft(raw: str, pages: list[EvidencePage]) -> CheckedGuide:
     if contains_secret(raw):
         raise CredentialsInOutput()
+    payload = _json_object(raw)
+    if contains_secret(payload):
+        raise CredentialsInOutput()
     by_key = {page.key: page for page in pages}
-    draft = DraftGuide.model_validate_json(raw)
+    draft = DraftGuide.model_validate_json(payload)
     if contains_secret(draft.model_dump_json()):
         raise CredentialsInOutput()
 

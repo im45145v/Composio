@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 
 import httpx
+import pytest
 
 from app.research.llm import AnthropicModel, OpenAIModel
 from app.research.search import BraveSearch, TavilySearch
@@ -28,6 +29,43 @@ def test_tavily_retries_a_transient_failure_then_parses_hits():
     assert calls["count"] == 2
     assert hits[0].url == "https://docs.example/oauth"
     assert hits[0].title == "OAuth"
+
+
+def test_rejected_api_keys_are_actionable_and_do_not_echo_provider_bodies():
+    from app.research.errors import ModelError, SearchError
+
+    def search_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, json={"error": "bad key sk-secretvalue"})
+
+    def model_handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, json={"error": {"message": "incorrect api key sk-secretvalue"}})
+
+    with pytest.raises(SearchError) as search_error:
+        TavilySearch("test-key", transport=httpx.MockTransport(search_handler)).search("example oauth", limit=1)
+    assert "SEARCH_API_KEY" in search_error.value.message
+    assert "sk-secretvalue" not in search_error.value.message
+
+    with pytest.raises(ModelError) as model_error:
+        OpenAIModel("test-key", "gpt-4o-mini", transport=httpx.MockTransport(model_handler)).complete(
+            system="system",
+            user="user",
+        )
+    assert "MODEL_API_KEY" in model_error.value.message
+    assert "sk-secretvalue" not in model_error.value.message
+
+
+def test_openai_reads_a_list_of_text_parts():
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": [{"type": "text", "text": "{\"ok\": true}"}]}}]},
+        )
+
+    text = OpenAIModel("test-key", "gpt-4o-mini", transport=httpx.MockTransport(handler)).complete(
+        system="system",
+        user="user",
+    )
+    assert text == "{\"ok\": true}"
 
 
 def test_brave_parses_web_results():
