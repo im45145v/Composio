@@ -233,8 +233,14 @@ def test_factory_selects_the_configured_vendors(tmp_path, monkeypatch):
     assert unconfigured.state.research.configured is False
 
     monkeypatch.setenv("MODEL_PROVIDER", "backboard")
-    monkeypatch.setenv("BACKBOARD_LLM_PROVIDER", "google")
+    monkeypatch.setenv("BACKBOARD_LLM_PROVIDER", "openai")
     monkeypatch.setenv("MODEL_NAME", "")
+    backboard_openai = create_app()
+    assert isinstance(backboard_openai.state.research.model, BackboardModel)
+    assert backboard_openai.state.research.model._llm_provider == "openai"
+    assert backboard_openai.state.research.model._model == "gpt-4.1"
+
+    monkeypatch.setenv("BACKBOARD_LLM_PROVIDER", "google")
     backboard = create_app()
     assert isinstance(backboard.state.research.model, BackboardModel)
     assert backboard.state.research.model._llm_provider == "google"

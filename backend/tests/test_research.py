@@ -266,7 +266,7 @@ def test_existing_guide_is_not_replaced(research_app):
         research_app.state.fakes["model"].payload = valid_draft() | {
             "summary": "This replacement must not be stored."
         }
-        again = client.post("/api/research-requests", json={"app_name": "Example"})
+        again = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
         assert again.status_code == 200
         assert again.json()["code"] == "guide_exists"
         assert "replacement" not in client.get("/api/guides/example").json()["summary"]
@@ -302,7 +302,7 @@ def test_invalid_input_and_ssrf_urls_are_rejected(client, research_app):
 def test_search_failure_streams_a_terminal_error(research_app):
     research_app.state.fakes["search"].error = SearchError("down", "search_failed")
     with TestClient(research_app) as client:
-        response = client.post("/api/research-requests", json={"app_name": "Example"})
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
         assert response.status_code == 202
         assert response.json()["guide_created"] is False
         events = read_events(client, response.json()["run_id"])
@@ -326,13 +326,18 @@ def test_model_failure_does_not_save_a_guide(research_app):
 
 def test_missing_evidence_does_not_fabricate_a_guide(research_app):
     research_app.state.fakes["search"].hits = []
+    reader = research_app.state.fakes["reader"]
+    original_pages = dict(reader.pages)
+    off_topic = "https://docs.other.test/oauth"
+    reader.pages = {off_topic: ("Other product", "This page does not name the submitted app.")}
     with TestClient(research_app) as client:
-        response = client.post("/api/research-requests", json={"app_name": "Example"})
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": off_topic})
         run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
         assert run["status"] == "insufficient_evidence"
         assert client.get("/api/guides/example").status_code == 404
         assert research_app.state.fakes["model"].systems == []
 
+    reader.pages = original_pages
     research_app.state.fakes["search"].hits = [
         SearchHit("Example OAuth", EXAMPLE_DOCS),
         SearchHit("Example toolkit", COMPOSIO_DOCS),
@@ -481,10 +486,10 @@ def test_duplicate_submission_joins_the_running_job(tmp_path, monkeypatch):
         unavailable_reason=None,
     )
     with TestClient(application) as client:
-        first = client.post("/api/research-requests", json={"app_name": "Example"})
+        first = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
         assert first.status_code == 202
         assert search.started.wait(5)
-        second = client.post("/api/research-requests", json={"app_name": "Example"})
+        second = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
         assert second.status_code == 200
         assert second.json()["code"] == "research_in_progress"
         assert second.json()["run_id"] == first.json()["run_id"]
@@ -718,10 +723,105 @@ def test_provider_rejection_is_shown_on_the_run(research_app):
         assert client.get("/api/guides/example").status_code == 404
 
 
+def test_a_new_app_needs_a_documentation_url(research_app):
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example"})
+        assert response.status_code == 422
+        assert response.json()["detail"]["code"] == "docs_url_required"
+        assert client.get("/api/guides/example").status_code == 404
+
+
+def test_recheck_waits_for_promotion_and_survives_the_seed(research_app):
+    with TestClient(research_app) as client:
+        created = client.post(
+            "/api/research-requests",
+            json={"app_name": "Example", "docs_url": EXAMPLE_DOCS},
+        )
+        assert created.status_code == 202
+        original = client.get("/api/guides/example").json()
+        assert original["origin"] == "researched"
+        assert original["pending_candidate"] is None
+
+        research_app.state.fakes["model"].payload = {
+            **valid_draft(),
+            "summary": "Example uses OAuth 2.0. This wording belongs only on the candidate.",
+        }
+        recheck = client.post(
+            "/api/guides/example/recheck",
+            json={"docs_url": EXAMPLE_DOCS},
+        )
+        assert recheck.status_code == 202
+        assert recheck.json()["guide_created"] is False
+        live = client.get("/api/guides/example").json()
+        assert live["summary"] == original["summary"]
+        assert live["pending_candidate"]["run_id"] == recheck.json()["run_id"]
+
+        candidate = client.get("/api/guides/example/candidate").json()
+        assert "Summary" in candidate["changed_fields"]
+        assert candidate["guide"]["summary"] != original["summary"]
+        assert "wording belongs only on the candidate" in candidate["guide"]["summary"]
+
+        promoted = client.post("/api/guides/example/candidate/promote")
+        assert promoted.status_code == 200
+        assert "wording belongs only on the candidate" in promoted.json()["summary"]
+        assert promoted.json()["origin"] == "researched"
+        assert promoted.json()["pending_candidate"] is None
+        assert client.get("/api/guides/example/candidate").status_code == 404
+
+    from app.seed import seed_database
+
+    seed_database(research_app.state.engine)
+    with TestClient(research_app) as client:
+        assert "wording belongs only on the candidate" in client.get("/api/guides/example").json()["summary"]
+
+
+def test_seed_does_not_overwrite_a_promoted_guide(research_app):
+    from sqlalchemy import select
+
+    from app.models import Guide
+    from app.seed import seed_database
+
+    with research_app.state.session_factory() as session:
+        guide = session.scalar(select(Guide).where(Guide.slug == "github"))
+        guide.origin = "researched"
+        guide.summary = "Promoted GitHub summary stays."
+        session.commit()
+    seed_database(research_app.state.engine)
+    with TestClient(research_app) as client:
+        body = client.get("/api/guides/github").json()
+        assert body["summary"] == "Promoted GitHub summary stays."
+        assert body["origin"] == "researched"
+
+
+def test_recheck_without_keys_leaves_the_guide_alone(client: TestClient):
+    before = client.get("/api/guides/github").json()["summary"]
+    response = client.post("/api/guides/github/recheck", json={"docs_url": "https://docs.github.com"})
+    assert response.status_code == 503
+    assert response.json()["guide_created"] is False
+    assert client.get("/api/guides/github").json()["summary"] == before
+    assert client.get("/api/guides/github/candidate").status_code == 404
+
+
+def test_discard_drops_a_candidate_without_editing_the_guide(research_app):
+    with TestClient(research_app) as client:
+        client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        original = client.get("/api/guides/example").json()["summary"]
+        research_app.state.fakes["model"].payload = {
+            **valid_draft(),
+            "summary": "Example uses OAuth 2.0. Discard should leave the saved summary alone.",
+        }
+        client.post("/api/guides/example/recheck", json={"docs_url": EXAMPLE_DOCS})
+        discarded = client.post("/api/guides/example/candidate/discard")
+        assert discarded.status_code == 200
+        assert discarded.json()["status"] == "discarded"
+        assert client.get("/api/guides/example").json()["summary"] == original
+        assert client.get("/api/guides/example").json()["pending_candidate"] is None
+
+
 def test_timeout_fails_the_run(research_app):
     research_app.state.research = replace(research_app.state.research, deadline_seconds=0)
     with TestClient(research_app) as client:
-        response = client.post("/api/research-requests", json={"app_name": "Example"})
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
         run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
         assert run["status"] == "failed"
         assert run["error_code"] == "timeout"

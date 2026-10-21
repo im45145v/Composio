@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ApiError, fetchGuides } from "../api";
-import { ClaimMark } from "../components/ClaimMark";
 import { EmptyBlock, ErrorBlock, LoadingBlock } from "../components/StatusBlock";
-import { SETUP_FILTERS, claimText, formatCheckedDate, previewClaim } from "../content";
+import { SETUP_FILTERS, formatCheckedDate, previewClaim, readableDecision, showsWait, statedLabel } from "../content";
 import type { GuideSummary } from "../types";
 
 type LoadState =
@@ -85,12 +84,14 @@ export function DirectoryPage() {
   return (
     <div>
       <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Integration library</p>
-      <h1 className="mt-2 max-w-3xl font-serif text-4xl leading-tight sm:text-5xl">OAuth setup, from the docs</h1>
+      <h1 className="mt-2 max-w-3xl font-serif text-4xl leading-tight sm:text-5xl">
+        Can you connect it with managed auth?
+      </h1>
       <p className="mt-4 max-w-2xl text-[15px] leading-7 text-muted">
-        What it takes to configure GitHub, Google Calendar, and Slack, including whether Composio managed
-        auth is enough. Nothing in this library was installed or approved while it was written. Documented
-        means a cited source says it. Uncertain means the sources leave it open. Verified would mean this
-        project ran it.
+        Each guide opens on that decision: use Composio managed auth, or register your own app, and what
+        can stall a launch. GitHub, Google Calendar, and Slack were written from provider and Composio
+        pages. A researched guide is added only when the pages support one. Nothing here was installed
+        or approved by this project.
       </p>
 
       <form
@@ -155,12 +156,35 @@ export function DirectoryPage() {
           <EmptyBlock
             title={filtered ? "No guides match" : "The library is empty"}
             detail={
-              filtered
-                ? `Nothing in the library matches “${query || "that path"}”. The three seeded providers are GitHub, Google Calendar, and Slack.`
-                : "The database has no guides. Start the API so it can load the seed data."
+              path === "own_app_unless_confirmed" && !query.trim()
+                ? "No guide in this library requires your own app before managed auth is ruled out. GitHub, Google Calendar, and Slack can start on managed auth."
+                : filtered
+                  ? `Nothing in the library matches “${query || "that path"}”. GitHub, Google Calendar, and Slack are the seeded guides.`
+                  : "The database has no guides. Start the API so it can load the seed data."
             }
             action={
-              filtered ? (
+              query.trim() ? (
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    to={`/research?app=${encodeURIComponent(query.trim())}`}
+                    className="border border-ink bg-ink px-3 py-2 text-sm text-paper"
+                  >
+                    Research {query.trim()}
+                  </Link>
+                  <button
+                    type="button"
+                    className="border border-ink px-3 py-2 text-sm"
+                    onClick={() => {
+                      setDraft("");
+                      setSeenQuery("");
+                      setState({ status: "loading" });
+                      setParams(new URLSearchParams());
+                    }}
+                  >
+                    Clear search
+                  </button>
+                </div>
+              ) : filtered ? (
                 <button
                   type="button"
                   className="border border-ink px-3 py-2 text-sm"
@@ -171,7 +195,7 @@ export function DirectoryPage() {
                     setParams(new URLSearchParams());
                   }}
                 >
-                  Clear search
+                  Clear filter
                 </button>
               ) : null
             }
@@ -193,28 +217,18 @@ export function DirectoryPage() {
                       <h2 className="font-serif text-2xl">{guide.name}</h2>
                       <p className="font-mono text-xs text-muted">Checked {formatCheckedDate(guide.last_checked)}</p>
                     </div>
-                    <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{guide.summary}</p>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                      <span>{claimText(guide.auth_type.value)}</span>
-                      <span className="text-line-strong" aria-hidden="true">
-                        /
-                      </span>
-                      <span>{guide.setup_path.label}</span>
-                      <ClaimMark status={guide.setup_path.status} />
-                      <span className="text-line-strong" aria-hidden="true">
-                        /
-                      </span>
-                      <span>{claimText(guide.difficulty.value)}</span>
-                      <ClaimMark status={guide.difficulty.status} />
-                    </div>
-                    <p className="mt-2 max-w-3xl text-sm leading-6">
-                      <span className="text-muted">Active effort · </span>
-                      {previewClaim(guide.active_effort.value)}
+                    <p className="mt-2 max-w-3xl text-[15px] leading-7">
+                      {previewClaim(readableDecision(guide.decision, guide.summary), 220)}
                     </p>
-                    <p className="max-w-3xl text-sm leading-6">
-                      <span className="text-muted">Approval wait · </span>
-                      {previewClaim(guide.approval_wait.value)}
-                    </p>
+                    {statedLabel(guide.setup_path.label, guide.setup_path.status) ? (
+                      <p className="mt-3 text-sm">{guide.setup_path.label}</p>
+                    ) : null}
+                    {showsWait(guide.approval_wait) ? (
+                      <p className="mt-2 max-w-3xl text-sm leading-6">
+                        <span className="text-muted">Wait for a first connection · </span>
+                        {previewClaim(guide.approval_wait.value, 160)}
+                      </p>
+                    ) : null}
                   </Link>
                 </li>
               ))}

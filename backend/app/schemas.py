@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator
 ClaimStatus = Literal["verified", "documented", "uncertain", "inferred", "unknown"]
 SetupPathValue = Literal["managed_or_own", "own_app_unless_confirmed"]
 ItemKind = Literal["prerequisite", "step", "blocker", "human_action"]
+Audience = Literal["managed", "own", "shared"]
+GuideOrigin = Literal["editorial", "researched"]
 
 
 class ClaimModel(BaseModel):
@@ -34,6 +36,7 @@ class GuideItemModel(BaseModel):
     status: ClaimStatus
     note: str | None = None
     source_url: str | None = None
+    audience: Audience = "shared"
 
 
 class SourceModel(BaseModel):
@@ -50,10 +53,18 @@ class ComposioSection(BaseModel):
     redirect_uri: ClaimModel
 
 
+class PendingCandidate(BaseModel):
+    id: str
+    run_id: str
+    created_at: str
+
+
 class GuideSummary(BaseModel):
     slug: str
     name: str
     summary: str
+    decision: str
+    origin: GuideOrigin
     auth_type: ClaimModel
     setup_path: SetupPathModel
     difficulty: ClaimModel
@@ -72,6 +83,15 @@ class GuideDetail(GuideSummary):
     blockers: list[GuideItemModel]
     human_actions: list[GuideItemModel]
     sources: list[SourceModel]
+    pending_candidate: PendingCandidate | None = None
+
+
+class CandidateView(BaseModel):
+    id: str
+    run_id: str
+    created_at: str
+    changed_fields: list[str]
+    guide: GuideDetail
 
 
 class GuideListResponse(BaseModel):
@@ -98,6 +118,10 @@ class ResearchUnavailable(BaseModel):
     app_name: str
     docs_url: str | None
     guide_created: Literal[False]
+
+
+class RecheckRequest(BaseModel):
+    docs_url: HttpUrl | None = None
 
 
 class GuideExistsResponse(BaseModel):

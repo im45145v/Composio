@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
-import { ApiError, fetchResearchRun, researchEventsUrl, submitResearch } from "../api";
+import { Link, useSearchParams } from "react-router-dom";
+import { ApiError, fetchHealth, fetchResearchRun, researchEventsUrl, submitRecheck, submitResearch } from "../api";
 import { ErrorBlock } from "../components/StatusBlock";
 import { GUIDE_FIELDS } from "../content";
 import type { ResearchProgress, ResearchUnavailable } from "../types";
@@ -12,7 +12,8 @@ type ResultState =
   | { status: "existing"; appName: string; slug: string }
   | { status: "running"; runId: string; appName: string; events: ResearchProgress[] }
   | { status: "completed"; runId: string; appName: string; slug: string; events: ResearchProgress[] }
-  | { status: "failed"; message: string; events: ResearchProgress[] }
+  | { status: "candidate"; runId: string; appName: string; slug: string; events: ResearchProgress[] }
+  | { status: "failed"; message: string; code: string | null; events: ResearchProgress[] }
   | { status: "error"; message: string };
 
 function parseProgress(kind: ResearchProgress["kind"], event: MessageEvent<string>): ResearchProgress | null {
@@ -39,10 +40,36 @@ function parseProgress(kind: ResearchProgress["kind"], event: MessageEvent<strin
   }
 }
 
+const STAGES = [
+  { id: "identify", label: "Identify", match: ["accepted", "identifying"] },
+  { id: "search", label: "Search", match: ["searching"] },
+  { id: "read", label: "Read", match: ["reading"] },
+  { id: "check", label: "Check", match: ["extracting", "validating"] },
+  { id: "save", label: "Save", match: ["persisting", "completed", "candidate_ready", "existing_guide"] },
+];
+
 export function ResearchPage() {
-  const [appName, setAppName] = useState("");
+  const [params] = useSearchParams();
+  const prefill = params.get("app") ?? "";
+  const recheck = params.get("recheck");
+  const [appName, setAppName] = useState(prefill);
   const [docsUrl, setDocsUrl] = useState("");
+  const [researchMode, setResearchMode] = useState<"configured" | "unavailable" | "unknown">("unknown");
   const [state, setState] = useState<ResultState>({ status: "idle" });
+
+  useEffect(() => {
+    if (prefill) {
+      setAppName(prefill);
+    }
+  }, [prefill, recheck]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchHealth(controller.signal)
+      .then(setResearchMode)
+      .catch(() => setResearchMode("unavailable"));
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     document.title = "Research an app · Field Guide";
@@ -85,7 +112,16 @@ export function ResearchPage() {
               events,
             };
           }
-          return { status: "failed", message: progress.message, events };
+          if (progress.status === "candidate_ready") {
+            return {
+              status: "candidate",
+              runId: current.runId,
+              appName: current.appName,
+              slug: progress.slug || "",
+              events,
+            };
+          }
+          return { status: "failed", message: progress.message, code: progress.code ?? null, events };
         }
         return { ...current, events };
       });
@@ -113,11 +149,22 @@ export function ResearchPage() {
                 events: current.events,
               };
             }
+            if (run.status === "candidate_ready") {
+              stop();
+              return {
+                status: "candidate",
+                runId,
+                appName: current.appName,
+                slug: run.guide_slug || "",
+                events: current.events,
+              };
+            }
             if (run.status === "failed" || run.status === "insufficient_evidence") {
               stop();
               return {
                 status: "failed",
                 message: run.message || "Research didn't produce a guide.",
+                code: run.error_code,
                 events: current.events,
               };
             }
@@ -145,7 +192,7 @@ export function ResearchPage() {
     event.preventDefault();
     setState({ status: "submitting" });
     try {
-      const result = await submitResearch(appName, docsUrl);
+      const result = recheck ? await submitRecheck(recheck, docsUrl) : await submitResearch(appName, docsUrl);
       if (result.code === "research_unavailable") {
         setState({ status: "unavailable", result });
         return;
@@ -162,17 +209,31 @@ export function ResearchPage() {
     }
   }
 
-  const events = state.status === "running" || state.status === "completed" || state.status === "failed" ? state.events : [];
+  const events =
+    state.status === "running" || state.status === "completed" || state.status === "candidate" || state.status === "failed"
+      ? state.events
+      : [];
+  const activeStage = events.reduce((best, event) => {
+    const index = STAGES.findIndex((item) => item.match.includes(event.stage));
+    return index > best ? index : best;
+  }, -1);
+  const kept = events.filter((item) => item.url && item.message.startsWith("Read "));
+  const skipped = events.filter((item) => /skipped|could not read/i.test(item.message));
+  const docsRequired = researchMode === "configured";
 
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="max-w-2xl">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Unfamiliar apps</p>
-        <h1 className="mt-2 font-serif text-4xl leading-tight">Research an app</h1>
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+          {recheck ? "Recheck" : "Unfamiliar apps"}
+        </p>
+        <h1 className="mt-2 font-serif text-4xl leading-tight">
+          {recheck ? `Recheck ${appName || "this guide"}` : "Research an app"}
+        </h1>
         <p className="mt-4 text-[15px] leading-7 text-muted">
-          Search official documentation, read the pages, and save a guide when those pages support one. If a
-          guide already exists, you get its address instead of a second copy. Nothing is marked verified,
-          because this project does not run the provider's OAuth flow.
+          {recheck
+            ? "A recheck reads the docs again and stores a candidate. The live guide stays until you promote that candidate."
+            : "Search official documentation, read the pages, and save a guide when those pages support one. An existing guide is left unchanged. Open it and recheck when you want a candidate instead."}
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-5">
@@ -183,36 +244,87 @@ export function ResearchPage() {
             <input
               id="app-name"
               required
+              readOnly={Boolean(recheck)}
               value={appName}
               onChange={(event) => setAppName(event.target.value)}
               placeholder="Notion or https://developers.notion.com"
-              className="mt-2 w-full border border-line-strong bg-raised px-3 py-3"
+              className="mt-2 w-full border border-line-strong bg-raised px-3 py-3 read-only:text-muted"
               autoComplete="off"
             />
           </div>
           <div>
             <label htmlFor="docs-url" className="text-sm font-medium">
-              Documentation URL <span className="font-normal text-muted">(optional)</span>
+              Documentation URL{" "}
+              {docsRequired ? null : <span className="font-normal text-muted">(optional until research is connected)</span>}
             </label>
             <input
               id="docs-url"
               type="url"
+              required={docsRequired || Boolean(recheck)}
               value={docsUrl}
               onChange={(event) => setDocsUrl(event.target.value)}
               placeholder="https://"
               className="mt-2 w-full border border-line-strong bg-raised px-3 py-3"
             />
+            <p className="mt-2 text-sm leading-6 text-muted">
+              Research reads at most four pages. A documentation URL keeps those pages on this app.
+            </p>
           </div>
           <button
             type="submit"
             disabled={state.status === "submitting" || state.status === "running"}
             className="border border-ink bg-ink px-4 py-2 text-sm text-paper disabled:opacity-60"
           >
-            {state.status === "submitting" || state.status === "running" ? "Researching" : "Research app"}
+            {state.status === "submitting" || state.status === "running"
+              ? "Researching"
+              : recheck
+                ? "Recheck guide"
+                : "Research app"}
           </button>
         </form>
 
         <div className="mt-8">
+          {events.length > 0 ? (
+            <ol aria-label="Research stages" className="mb-4 flex flex-wrap gap-2">
+              {STAGES.map((stage, index) => {
+                const reached = activeStage >= index;
+                return (
+                  <li
+                    key={stage.id}
+                    className={`border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] ${reached ? "border-ink bg-ink text-paper" : "border-line text-muted"}`}
+                  >
+                    {stage.label}
+                  </li>
+                );
+              })}
+            </ol>
+          ) : null}
+          {kept.length > 0 || skipped.length > 0 ? (
+            <div className="mb-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <h2 className="text-sm font-semibold">Pages kept</h2>
+                <ul className="mt-2 space-y-2 text-sm">
+                  {kept.map((item) => (
+                    <li key={item.id}>
+                      <a href={item.url} className="underline decoration-line-strong underline-offset-2">
+                        {item.title || item.url}
+                      </a>
+                    </li>
+                  ))}
+                  {kept.length === 0 ? <li className="text-muted">None yet</li> : null}
+                </ul>
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold">Pages skipped</h2>
+                <ul className="mt-2 space-y-2 text-sm text-muted">
+                  {skipped.map((item) => (
+                    <li key={item.id}>{item.message}</li>
+                  ))}
+                  {skipped.length === 0 ? <li>None</li> : null}
+                </ul>
+              </div>
+            </div>
+          ) : null}
           {events.length > 0 ? (
             <ol aria-live="polite" className="space-y-3 border border-line bg-raised px-5 py-5">
               {events.map((item) => (
@@ -263,7 +375,7 @@ export function ResearchPage() {
               </h2>
               <p className="mt-3 text-sm leading-6">
                 {state.status === "existing"
-                  ? `${state.appName} is already in the library, so the existing guide was left unchanged.`
+                  ? `${state.appName} is already in the library, so this request left it unchanged. Recheck from the guide when you want a candidate.`
                   : `${state.appName} now has a stable address from the pages that were read.`}
               </p>
               {state.slug ? (
@@ -277,12 +389,32 @@ export function ResearchPage() {
             </div>
           ) : null}
 
+          {state.status === "candidate" ? (
+            <div role="status" className="mt-4 border border-line bg-raised px-5 py-6">
+              <h2 className="font-serif text-2xl">Candidate ready</h2>
+              <p className="mt-3 text-sm leading-6">
+                {state.appName} has a recheck waiting. The live guide was not changed.
+              </p>
+              {state.slug ? (
+                <Link
+                  to={`/guides/${state.slug}`}
+                  className="mt-5 inline-block border border-ink bg-ink px-3 py-2 text-sm text-paper"
+                >
+                  Review the candidate
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+
           {state.status === "failed" || state.status === "error" ? (
             <div className="mt-4">
-              <ErrorBlock
-                title="Research didn't produce a guide"
-                detail={state.message}
-              />
+              <ErrorBlock title="Research didn't produce a guide" detail={state.message} />
+              {state.status === "failed" && state.code === "insufficient_evidence" ? (
+                <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
+                  Try a different documentation URL that names this app. Pages that do not discuss it are skipped,
+                  and nothing is saved.
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>

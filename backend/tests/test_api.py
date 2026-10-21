@@ -101,6 +101,15 @@ def test_guide_pages_are_persistent_and_separate_claims(client: TestClient):
         assert "uncertain" in statuses
         assert body["auth_type"]["source_url"] is None
         assert body["steps"][0]["source_url"] is None
+        assert body["origin"] == "editorial"
+        assert body["decision"]
+        assert body["pending_candidate"] is None
+    github = client.get("/api/guides/github").json()
+    own_step = next(step for step in github["steps"] if step["title"] == "Open the new OAuth app form")
+    assert own_step["audience"] == "own"
+    consent = next(item for item in github["blockers"] if item["title"] == "Managed auth shows Composio on the consent screen")
+    assert consent["audience"] == "managed"
+    assert any(step["audience"] == "shared" for step in client.get("/api/guides/google-calendar").json()["steps"])
 
 
 def test_provider_waits_are_not_invented(client: TestClient):

@@ -69,6 +69,17 @@ def submit_research(
         return JSONResponse(status_code=200, content=payload.model_dump(mode="json"))
 
     deps = request.app.state.research
+    if deps.configured and not identity.docs_url:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "docs_url_required",
+                "message": (
+                    "Add the documentation URL. Research reads at most four pages, "
+                    "and a URL keeps those pages on this app. No guide was saved."
+                ),
+            },
+        )
     if not deps.configured:
         payload = ResearchUnavailable(
             code="research_unavailable",
@@ -104,10 +115,17 @@ def submit_research(
     return JSONResponse(status_code=202, content=body_out.model_dump(mode="json"))
 
 
-def start_and_launch(session: Session, request: Request, identity):
+def start_and_launch(
+    session: Session,
+    request: Request,
+    identity,
+    *,
+    purpose: str = "create",
+    target_slug: str | None = None,
+):
     from app.research.store import start_run
 
-    run = start_run(session, identity)
+    run = start_run(session, identity, purpose=purpose, target_slug=target_slug)
     deps = request.app.state.research
     factory = request.app.state.session_factory
     if deps.inline:

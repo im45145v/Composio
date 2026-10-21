@@ -11,6 +11,7 @@ from app.schemas import (
     GuideDetail,
     GuideItemModel,
     GuideSummary,
+    PendingCandidate,
     SetupPathModel,
     SourceModel,
 )
@@ -44,6 +45,7 @@ def _items(guide: Guide, kind: str) -> list[GuideItemModel]:
             status=item.status,
             note=item.note,
             source_url=item.source_url,
+            audience=item.audience if item.audience in {"managed", "own", "shared"} else "shared",
         )
         for item in rows
     ]
@@ -55,6 +57,8 @@ def guide_summary(guide: Guide) -> GuideSummary:
         slug=guide.slug,
         name=guide.name,
         summary=guide.summary,
+        decision=guide.decision,
+        origin="researched" if guide.origin == "researched" else "editorial",
         auth_type=_claim(
             guide.auth_type_value,
             guide.auth_type_status,
@@ -97,7 +101,7 @@ def guide_summary(guide: Guide) -> GuideSummary:
     )
 
 
-def guide_detail(guide: Guide) -> GuideDetail:
+def guide_detail(guide: Guide, pending: PendingCandidate | None = None) -> GuideDetail:
     summary = guide_summary(guide)
     sources = _claim_sources(guide)
     return GuideDetail(
@@ -137,4 +141,5 @@ def guide_detail(guide: Guide) -> GuideDetail:
             )
             for source in sorted(guide.sources, key=lambda source: source.position)
         ],
+        pending_candidate=pending,
     )

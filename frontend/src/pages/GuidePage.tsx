@@ -1,10 +1,23 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ApiError, fetchGuide } from "../api";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { ApiError, discardCandidate, fetchCandidate, fetchGuide, promoteCandidate } from "../api";
 import { ClaimMark } from "../components/ClaimMark";
 import { ErrorBlock, LoadingBlock } from "../components/StatusBlock";
-import { CLAIM_COPY, claimText, formatCheckedDate } from "../content";
-import type { Claim, ClaimStatus, GuideDetail, GuideItem } from "../types";
+import {
+  callbackUrl,
+  claimText,
+  formatCheckedDate,
+  gapSentence,
+  isStale,
+  isStated,
+  itemsFor,
+  markFor,
+  readableDecision,
+  readerNote,
+  redirectChoices,
+  statedLabel,
+} from "../content";
+import type { CandidateView, Claim, GuideDetail, GuideItem, GuideView } from "../types";
 
 type LoadState =
   | { status: "loading" }
@@ -18,8 +31,13 @@ export function GuidePage() {
 }
 
 function GuideDocument({ slug }: { slug: string }) {
+  const [params, setParams] = useSearchParams();
+  const view: GuideView = params.get("view") === "register" ? "register" : "decide";
   const [reloadKey, setReloadKey] = useState(0);
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [candidate, setCandidate] = useState<CandidateView | null>(null);
+  const [candidateError, setCandidateError] = useState<string | null>(null);
+  const [promoting, setPromoting] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -43,6 +61,37 @@ function GuideDocument({ slug }: { slug: string }) {
       });
     return () => controller.abort();
   }, [slug, reloadKey]);
+
+  const pendingId = state.status === "ready" ? state.guide.pending_candidate?.id : null;
+
+  useEffect(() => {
+    if (!pendingId) {
+      setCandidate(null);
+      return;
+    }
+    const controller = new AbortController();
+    fetchCandidate(slug, controller.signal)
+      .then((body) => setCandidate(body))
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        setCandidateError(error instanceof ApiError ? error.message : "The recheck could not be loaded.");
+      });
+    return () => controller.abort();
+  }, [pendingId, slug]);
+
+  function setView(next: GuideView) {
+    setParams((current) => {
+      const paramsNext = new URLSearchParams(current);
+      if (next === "register") {
+        paramsNext.set("view", "register");
+      } else {
+        paramsNext.delete("view");
+      }
+      return paramsNext;
+    });
+  }
 
   if (state.status === "loading") {
     return <LoadingBlock label="Loading guide" />;
@@ -72,8 +121,11 @@ function GuideDocument({ slug }: { slug: string }) {
           <Link to="/" className="border border-ink bg-ink px-3 py-2 text-sm text-paper">
             Back to the library
           </Link>
-          <Link to="/research" className="border border-line-strong bg-raised px-3 py-2 text-sm">
-            Research an app
+          <Link
+            to={`/research?app=${encodeURIComponent(slug)}`}
+            className="border border-line-strong bg-raised px-3 py-2 text-sm"
+          >
+            Research this name
           </Link>
         </div>
       </div>
@@ -82,78 +134,97 @@ function GuideDocument({ slug }: { slug: string }) {
 
   const { guide } = state;
   const shareUrl = `${window.location.origin}/guides/${guide.slug}`;
+  const stale = isStale(guide.last_checked);
+  const decision = readableDecision(guide.composio.decision, guide.summary);
+  const recheckHref = `/research?recheck=${encodeURIComponent(guide.slug)}&app=${encodeURIComponent(guide.name)}`;
+
+  async function onPromote() {
+    setPromoting(true);
+    setCandidateError(null);
+    try {
+      await promoteCandidate(guide.slug);
+      setCandidate(null);
+      setReloadKey((value) => value + 1);
+    } catch (error: unknown) {
+      setCandidateError(error instanceof ApiError ? error.message : "The candidate could not replace the live guide.");
+    } finally {
+      setPromoting(false);
+    }
+  }
+
+  async function onDiscard() {
+    setPromoting(true);
+    setCandidateError(null);
+    try {
+      await discardCandidate(guide.slug);
+      setCandidate(null);
+      setReloadKey((value) => value + 1);
+    } catch (error: unknown) {
+      setCandidateError(error instanceof ApiError ? error.message : "The candidate could not be discarded.");
+    } finally {
+      setPromoting(false);
+    }
+  }
 
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start">
       <article>
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">{guide.slug}</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+          {guide.origin === "researched" ? "Researched guide" : "Editorial guide"} · {guide.slug}
+        </p>
         <h1 className="mt-2 font-serif text-4xl leading-tight sm:text-5xl">{guide.name}</h1>
-        <p className="mt-4 max-w-[68ch] font-serif text-xl leading-8">{guide.summary}</p>
-        <p className="mt-5 max-w-[68ch] border-l-2 border-pine pl-4 text-sm leading-6">{guide.execution_note}</p>
+        <p className="mt-4 max-w-[68ch] font-serif text-xl leading-8">{decision}</p>
 
-        <dl className="mt-8 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2">
-          <Meta label="Authentication" claim={guide.auth_type} />
-          <Meta
-            label="Setup path"
-            claim={{
-              value: guide.setup_path.label,
-              status: guide.setup_path.status,
-              note: guide.setup_path.note,
-              source_url: guide.setup_path.source_url,
-            }}
-          />
-          <Meta label="Difficulty" claim={guide.difficulty} />
-          <Meta label="Active effort" claim={guide.active_effort} />
-          <Meta label="Approval wait" claim={guide.approval_wait} />
-          <Meta label="Confidence" claim={guide.confidence} />
-        </dl>
+        <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Guide path">
+          <PathButton selected={view === "decide"} onClick={() => setView("decide")}>
+            Managed auth
+          </PathButton>
+          <PathButton selected={view === "register"} onClick={() => setView("register")}>
+            Register an app
+          </PathButton>
+        </div>
 
-        <section className="mt-10 border border-line bg-raised p-5 sm:p-6">
-          <h2 className="font-serif text-2xl">Composio path</h2>
-          <p className="mt-3 max-w-[68ch] text-[15px] leading-7">{guide.composio.decision}</p>
-          <div className="mt-6 grid gap-6 md:grid-cols-2">
-            <ClaimBlock title="Managed auth" claim={guide.composio.managed} />
-            <ClaimBlock title="Your own OAuth app" claim={guide.composio.bring_your_own} />
-          </div>
-          <div className="mt-6 border-t border-line pt-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-semibold">Redirect URI</h3>
-              <ClaimMark status={guide.composio.redirect_uri.status} />
-            </div>
-            <p className="mt-2 break-all font-mono text-sm">{claimText(guide.composio.redirect_uri.value)}</p>
-            {guide.composio.redirect_uri.note ? (
-              <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">{guide.composio.redirect_uri.note}</p>
+        {candidate ? (
+          <div className="mt-6 border border-line bg-raised p-5">
+            <h2 className="font-serif text-2xl">A recheck is waiting</h2>
+            <p className="mt-2 max-w-[68ch] text-sm leading-6">
+              The live guide was not changed. Promote replaces it with the candidate. Discard leaves this guide as it is.
+            </p>
+            <p className="mt-3 text-sm leading-6">
+              {candidate.changed_fields.length > 0
+                ? `Different: ${candidate.changed_fields.join(", ")}.`
+                : "The decision, redirect, and approval wait match. Steps may still differ."}
+            </p>
+            {candidate.changed_fields.includes("Decision") ? (
+              <p className="mt-3 max-w-[68ch] text-sm leading-6 text-muted">{candidate.guide.composio.decision}</p>
             ) : null}
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={promoting}
+                onClick={() => void onPromote()}
+                className="border border-ink bg-ink px-3 py-2 text-sm text-paper disabled:opacity-60"
+              >
+                Promote candidate
+              </button>
+              <button
+                type="button"
+                disabled={promoting}
+                onClick={() => void onDiscard()}
+                className="border border-line-strong bg-paper px-3 py-2 text-sm disabled:opacity-60"
+              >
+                Discard
+              </button>
+            </div>
           </div>
-        </section>
+        ) : null}
+        {candidateError ? <p className="mt-3 text-sm text-danger">{candidateError}</p> : null}
 
-        <ItemSection
-          title="Prerequisites"
-          intro="Have these before opening the provider's form."
-          items={guide.prerequisites}
-        />
-        <section className="mt-10">
-          <h2 className="font-serif text-2xl">Steps</h2>
-          <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">In the order the cited docs describe them.</p>
-          <ol className="mt-6 space-y-8">
-            {guide.steps.map((step) => (
-              <li key={step.position} className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3">
-                <span className="pt-1 font-mono text-sm text-muted">{String(step.position).padStart(2, "0")}</span>
-                <ItemBody item={step} />
-              </li>
-            ))}
-          </ol>
-        </section>
-        <ItemSection
-          title="Blockers"
-          intro="Reasons the launch can stall, taken from the sources or marked when the sources leave it open."
-          items={guide.blockers}
-        />
-        <ItemSection
-          title="Needs a person"
-          intro="Clicks and decisions the docs leave to a human. This project did not perform them."
-          items={guide.human_actions}
-        />
+        {view === "decide" ? (
+          <DecideBody guide={guide} onRegister={() => setView("register")} />
+        ) : (
+          <RegisterBody guide={guide} />
+        )}
       </article>
 
       <aside className="border border-line bg-raised p-5 lg:sticky lg:top-20">
@@ -181,31 +252,266 @@ function GuideDocument({ slug }: { slug: string }) {
             </li>
           ))}
         </ol>
-        <p className="mt-6 text-sm font-semibold">How to read a mark</p>
-        <ul className="mt-3 space-y-3">
-          {(Object.keys(CLAIM_COPY) as ClaimStatus[]).map((status) => (
-            <li key={status}>
-              <ClaimMark status={status} />
-              <p className="mt-1 text-sm leading-5 text-muted">{CLAIM_COPY[status].description}</p>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-6 font-mono text-[11px] text-muted">Last checked {formatCheckedDate(guide.last_checked)}</p>
+        <p className="mt-6 text-sm leading-6 text-muted">
+          A mark appears only on an estimate or a reading. Everything else is a statement from the sources below.
+          This project did not run the OAuth flow.
+        </p>
+        <p className="mt-4 font-mono text-[11px] text-muted">
+          Last checked {formatCheckedDate(guide.last_checked)}
+          {stale ? " · older than 30 days" : ""}
+        </p>
+        <Link to={recheckHref} className="mt-3 inline-block text-sm underline decoration-line-strong underline-offset-2">
+          {stale ? "Recheck these docs" : "Recheck this guide"}
+        </Link>
       </aside>
     </div>
   );
 }
 
+function PathButton({
+  selected,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={`border px-3 py-1.5 text-sm ${selected ? "border-ink bg-ink text-paper" : "border-line-strong bg-raised text-ink"}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function DecideBody({ guide, onRegister }: { guide: GuideDetail; onRegister: () => void }) {
+  const steps = itemsFor(guide.steps, "decide");
+  const blockers = itemsFor(guide.blockers, "decide");
+  const humans = itemsFor(guide.human_actions, "decide");
+  const gap = gapSentence(guide);
+  const setup = {
+    value: guide.setup_path.label,
+    status: guide.setup_path.status,
+    note: guide.setup_path.note,
+    source_url: guide.setup_path.source_url,
+  };
+  const facts = [
+    statedLabel(guide.setup_path.label, guide.setup_path.status) ? { label: "Setup path", claim: setup } : null,
+    isStated(guide.active_effort) ? { label: "Hands-on work", claim: guide.active_effort } : null,
+    isStated(guide.approval_wait) ? { label: "Wait for a first connection", claim: guide.approval_wait } : null,
+  ].filter((fact) => fact !== null);
+  return (
+    <>
+      {facts.length > 0 ? (
+        <dl className="mt-8 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
+          {facts.map((fact) => (
+            <Meta key={fact.label} label={fact.label} claim={fact.claim} />
+          ))}
+        </dl>
+      ) : null}
+      {gap ? <p className="mt-4 max-w-[68ch] text-sm leading-6 text-muted">{gap}</p> : null}
+
+      {isStated(guide.composio.managed) ? (
+        <section className="mt-10 border border-line bg-raised p-5 sm:p-6">
+          <h2 className="font-serif text-2xl">Managed auth</h2>
+          <ClaimBlock title="What you use" claim={guide.composio.managed} />
+          <div className="mt-6">
+            <button type="button" onClick={onRegister} className="border border-ink px-3 py-2 text-sm">
+              I need my own app
+            </button>
+          </div>
+        </section>
+      ) : (
+        <div className="mt-8">
+          <button type="button" onClick={onRegister} className="border border-ink px-3 py-2 text-sm">
+            Register an app instead
+          </button>
+        </div>
+      )}
+
+      {steps.length > 0 ? (
+        <StepList title="Setup" intro="In the order the cited pages describe." items={steps} />
+      ) : null}
+      {blockers.length > 0 ? (
+        <ItemSection title="What can stall a first connection" intro="These apply before anyone registers an app." items={blockers} />
+      ) : null}
+      {humans.length > 0 ? (
+        <Checklist slug={guide.slug} kind="human_action" title="Needs a person" items={humans} />
+      ) : null}
+    </>
+  );
+}
+
+function RegisterBody({ guide }: { guide: GuideDetail }) {
+  const prerequisites = itemsFor(guide.prerequisites, "register");
+  const steps = itemsFor(guide.steps, "register");
+  const blockers = itemsFor(guide.blockers, "register");
+  const humans = itemsFor(guide.human_actions, "register");
+  const redirects = redirectChoices(guide.composio.redirect_uri.value, guide.composio.redirect_uri.note);
+  const primary = callbackUrl(guide.composio.redirect_uri.value);
+  return (
+    <>
+      <section className="mt-8 border border-line bg-raised p-5 sm:p-6">
+        <h2 className="font-serif text-2xl">Your own OAuth app</h2>
+        {isStated(guide.composio.bring_your_own) ? (
+          <ClaimBlock title="When this path applies" claim={guide.composio.bring_your_own} />
+        ) : (
+          <p className="mt-3 max-w-[68ch] text-sm leading-6 text-muted">
+            The steps below are what the cited pages say about registering an app.
+          </p>
+        )}
+        <div className="mt-6 border-t border-line pt-4">
+          <h3 className="text-sm font-semibold">Redirect URI</h3>
+          {primary ? (
+            <CopyValue value={primary} />
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-muted">The cited pages do not print a callback URL.</p>
+          )}
+          {redirects.filter((url) => url !== primary).length > 0 ? (
+            <div className="mt-4">
+              <p className="text-sm leading-6 text-muted">
+                Pages also name another callback. The provider and the auth config have to use the same one.
+              </p>
+              <ul className="mt-2 space-y-2">
+                {redirects
+                  .filter((url) => url !== primary)
+                  .map((url) => (
+                    <li key={url}>
+                      <CopyValue value={url} />
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ) : null}
+          {readerNote(guide.composio.redirect_uri.note) ? (
+            <p className="mt-3 max-w-[68ch] text-sm leading-6 text-muted">{readerNote(guide.composio.redirect_uri.note)}</p>
+          ) : null}
+        </div>
+      </section>
+      {prerequisites.length > 0 ? (
+        <ItemSection title="Prerequisites" intro="Have these before opening the provider's form." items={prerequisites} />
+      ) : null}
+      {steps.length > 0 ? (
+        <StepList title="Steps" intro="In the order the cited pages describe." items={steps} />
+      ) : null}
+      {blockers.length > 0 ? (
+        <ItemSection
+          title="Blockers on this path"
+          intro="These apply when you register your own app. A Marketplace or verification wait stays here."
+          items={blockers}
+        />
+      ) : null}
+      {humans.length > 0 ? (
+        <Checklist slug={guide.slug} kind="human_action" title="Needs a person" items={humans} />
+      ) : null}
+    </>
+  );
+}
+
+function Checklist({
+  slug,
+  kind,
+  title,
+  items,
+}: {
+  slug: string;
+  kind: string;
+  title: string;
+  items: GuideItem[];
+}) {
+  const storageKey = `field-guide-checks:${slug}`;
+  const [checked, setChecked] = useState<string[]>(() => readChecks(storageKey));
+
+  function toggle(id: string) {
+    setChecked((current) => {
+      const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+      window.localStorage.setItem(storageKey, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  return (
+    <section className="mt-10">
+      <h2 className="font-serif text-2xl">{title}</h2>
+      <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">
+        Saved in this browser. Checking an item records that you did it. It does not record a test of the OAuth flow.
+      </p>
+      <ul className="mt-5 space-y-5">
+        {items.map((item) => {
+          const id = `${kind}:${item.position}`;
+          const done = checked.includes(id);
+          return (
+            <li key={id} className="border-t border-line pt-4">
+              <label className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={done}
+                  onChange={() => toggle(id)}
+                />
+                <span>
+                  <ItemBody item={item} />
+                </span>
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function readChecks(key: string): string[] {
+  try {
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function CopyValue({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-3">
+      <code className="break-all font-mono text-sm">{value}</code>
+      <button type="button" onClick={() => void copy()} className="border border-ink px-2 py-1 text-sm">
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+  );
+}
+
 function Meta({ label, claim }: { label: string; claim: Claim }) {
+  const note = readerNote(claim.note);
+  const mark = markFor(claim.status);
   return (
     <div className="bg-raised px-4 py-4">
       <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{label}</dt>
       <dd className="mt-2 text-sm leading-6">
         <span>{claimText(claim.value)}</span>
-        <span className="mt-2 block">
-          <ClaimMark status={claim.status} />
-        </span>
-        {claim.note ? <span className="mt-2 block text-muted">{claim.note}</span> : null}
+        {mark ? (
+          <span className="mt-2 block">
+            <ClaimMark status={mark} />
+          </span>
+        ) : null}
+        {note ? <span className="mt-2 block text-muted">{note}</span> : null}
         <SourceLink url={claim.source_url} />
       </dd>
     </div>
@@ -213,16 +519,35 @@ function Meta({ label, claim }: { label: string; claim: Claim }) {
 }
 
 function ClaimBlock({ title, claim }: { title: string; claim: Claim }) {
+  const note = readerNote(claim.note);
+  const mark = markFor(claim.status);
   return (
-    <div>
+    <div className="mt-4">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-sm font-semibold">{title}</h3>
-        <ClaimMark status={claim.status} />
+        {mark ? <ClaimMark status={mark} /> : null}
       </div>
       <p className="mt-2 text-sm leading-6">{claimText(claim.value)}</p>
-      {claim.note ? <p className="mt-2 text-sm leading-6 text-muted">{claim.note}</p> : null}
+      {note ? <p className="mt-2 text-sm leading-6 text-muted">{note}</p> : null}
       <SourceLink url={claim.source_url} />
     </div>
+  );
+}
+
+function StepList({ title, intro, items }: { title: string; intro: string; items: GuideItem[] }) {
+  return (
+    <section className="mt-10">
+      <h2 className="font-serif text-2xl">{title}</h2>
+      <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">{intro}</p>
+      <ol className="mt-6 space-y-8">
+        {items.map((step, index) => (
+          <li key={step.position} className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3">
+            <span className="pt-1 font-mono text-sm text-muted">{String(index + 1).padStart(2, "0")}</span>
+            <ItemBody item={step} />
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -243,14 +568,16 @@ function ItemSection({ title, intro, items }: { title: string; intro: string; it
 }
 
 function ItemBody({ item }: { item: GuideItem }) {
+  const note = readerNote(item.note);
+  const mark = markFor(item.status);
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-base font-semibold">{item.title}</h3>
-        <ClaimMark status={item.status} />
+        <h3 className="text-base font-semibold">{item.title.replace(/\.$/, "")}</h3>
+        {mark ? <ClaimMark status={mark} /> : null}
       </div>
       <p className="mt-2 max-w-[68ch] text-[15px] leading-7">{item.body}</p>
-      {item.note ? <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">{item.note}</p> : null}
+      {note ? <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">{note}</p> : null}
       <SourceLink url={item.source_url} />
     </div>
   );
@@ -260,12 +587,15 @@ function SourceLink({ url }: { url?: string | null }) {
   if (!url) {
     return null;
   }
+  let label = url;
+  try {
+    label = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    label = url;
+  }
   return (
-    <a
-      href={url}
-      className="mt-2 block max-w-[68ch] break-all text-sm underline decoration-line-strong underline-offset-2"
-    >
-      {url}
+    <a href={url} title={url} className="mt-2 inline-block text-sm underline decoration-line-strong underline-offset-2">
+      {label}
     </a>
   );
 }

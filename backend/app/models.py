@@ -52,6 +52,7 @@ class Guide(Base):
     tested: Mapped[bool] = mapped_column(Boolean, default=False)
     last_checked: Mapped[date] = mapped_column(Date)
     claim_sources_json: Mapped[str] = mapped_column(Text, default="{}", server_default="{}")
+    origin: Mapped[str] = mapped_column(String(20), default="editorial", server_default="editorial")
 
     items: Mapped[list[GuideItem]] = relationship(
         back_populates="guide",
@@ -78,6 +79,7 @@ class GuideItem(Base):
     status: Mapped[str] = mapped_column(String(20))
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    audience: Mapped[str] = mapped_column(String(16), default="shared", server_default="shared")
 
     guide: Mapped[Guide] = relationship(back_populates="items")
 
@@ -110,6 +112,8 @@ class ResearchRun(Base):
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     guide_slug: Mapped[str | None] = mapped_column(String(80), nullable=True)
     guide_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    purpose: Mapped[str] = mapped_column(String(16), default="create", server_default="create")
+    target_slug: Mapped[str | None] = mapped_column(String(80), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
@@ -161,3 +165,16 @@ class EvidenceRecord(Base):
     supports_json: Mapped[str] = mapped_column(Text, default="[]")
 
     run: Mapped[ResearchRun] = relationship(back_populates="evidence")
+
+
+class GuideCandidate(Base):
+    """A recheck result. It does not replace the live guide until someone promotes it."""
+
+    __tablename__ = "guide_candidates"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    guide_slug: Mapped[str] = mapped_column(String(80), index=True)
+    run_id: Mapped[str] = mapped_column(String(36), index=True)
+    status: Mapped[str] = mapped_column(String(16), index=True)
+    payload_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

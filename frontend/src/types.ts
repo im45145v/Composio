@@ -2,6 +2,12 @@ export type ClaimStatus = "verified" | "documented" | "uncertain" | "inferred" |
 
 export type SetupPathValue = "managed_or_own" | "own_app_unless_confirmed";
 
+export type Audience = "managed" | "own" | "shared";
+
+export type GuideOrigin = "editorial" | "researched";
+
+export type GuideView = "decide" | "register";
+
 export interface Claim {
   value: string | null;
   status: ClaimStatus;
@@ -24,6 +30,7 @@ export interface GuideItem {
   status: ClaimStatus;
   note: string | null;
   source_url?: string | null;
+  audience: Audience;
 }
 
 export interface Source {
@@ -40,10 +47,18 @@ export interface ComposioSection {
   redirect_uri: Claim;
 }
 
+export interface PendingCandidate {
+  id: string;
+  run_id: string;
+  created_at: string;
+}
+
 export interface GuideSummary {
   slug: string;
   name: string;
   summary: string;
+  decision: string;
+  origin: GuideOrigin;
   auth_type: Claim;
   setup_path: SetupPath;
   difficulty: Claim;
@@ -62,6 +77,15 @@ export interface GuideDetail extends GuideSummary {
   blockers: GuideItem[];
   human_actions: GuideItem[];
   sources: Source[];
+  pending_candidate: PendingCandidate | null;
+}
+
+export interface CandidateView {
+  id: string;
+  run_id: string;
+  created_at: string;
+  changed_fields: string[];
+  guide: GuideDetail;
 }
 
 export interface GuideListResponse {

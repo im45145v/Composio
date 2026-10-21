@@ -1,4 +1,10 @@
-import type { GuideDetail, GuideListResponse, ResearchRunStatus, ResearchSubmission } from "./types";
+import type {
+  CandidateView,
+  GuideDetail,
+  GuideListResponse,
+  ResearchRunStatus,
+  ResearchSubmission,
+} from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
@@ -46,6 +52,15 @@ export async function fetchGuides(
     throw new ApiError(response.status, "The guide library could not be loaded.");
   }
   return (await readBody(response)) as GuideListResponse;
+}
+
+export async function fetchHealth(signal?: AbortSignal): Promise<"configured" | "unavailable"> {
+  const response = await fetch(`${API_BASE}/health`, { signal });
+  const body = await readBody(response);
+  if (!response.ok || !isRecord(body) || body.research !== "configured") {
+    return "unavailable";
+  }
+  return "configured";
 }
 
 export async function fetchGuide(slug: string, signal: AbortSignal): Promise<GuideDetail | null> {
@@ -101,6 +116,56 @@ function isResearchSubmission(status: number, body: unknown): body is ResearchSu
     return true;
   }
   return false;
+}
+
+export async function submitRecheck(slug: string, docsUrl: string): Promise<ResearchSubmission> {
+  const response = await fetch(`${API_BASE}/guides/${encodeURIComponent(slug)}/recheck`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ docs_url: docsUrl.trim() ? docsUrl.trim() : null }),
+  });
+  const body = await readBody(response);
+  if (isResearchSubmission(response.status, body)) {
+    return body;
+  }
+  if (response.status === 422) {
+    const detail = isRecord(body) && isRecord(body.detail) ? body.detail : null;
+    const message =
+      detail && typeof detail.message === "string"
+        ? detail.message
+        : "Add a public documentation URL before rechecking.";
+    throw new ApiError(422, message);
+  }
+  throw new ApiError(response.status, "The recheck could not be started.");
+}
+
+export async function fetchCandidate(slug: string, signal: AbortSignal): Promise<CandidateView | null> {
+  const response = await fetch(`${API_BASE}/guides/${encodeURIComponent(slug)}/candidate`, { signal });
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new ApiError(response.status, "The recheck candidate could not be loaded.");
+  }
+  return (await readBody(response)) as CandidateView;
+}
+
+export async function promoteCandidate(slug: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/guides/${encodeURIComponent(slug)}/candidate/promote`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, "The candidate could not replace the live guide.");
+  }
+}
+
+export async function discardCandidate(slug: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/guides/${encodeURIComponent(slug)}/candidate/discard`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, "The candidate could not be discarded.");
+  }
 }
 
 export function researchEventsUrl(runId: string): string {

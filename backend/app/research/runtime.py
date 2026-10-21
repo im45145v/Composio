@@ -10,6 +10,8 @@ from app.research.reader import PageReader
 from app.research.search import BraveSearch, SearchClient, TavilySearch
 
 OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
+# Guide extraction needs schema adherence inside the research deadline. gpt-4.1 does that without a reasoning pass.
+BACKBOARD_OPENAI_DEFAULT_MODEL = "gpt-4.1"
 ANTHROPIC_DEFAULT_MODEL = "claude-sonnet-4-5"
 GEMMA_DEFAULT_MODEL = "gemma-4-26b-a4b-it"
 MODEL_PROVIDERS = {"openai", "anthropic", "backboard", "gemma"}
@@ -68,8 +70,10 @@ def _default_model(settings: Settings) -> str:
         return ANTHROPIC_DEFAULT_MODEL
     if settings.model_provider == "gemma":
         return GEMMA_DEFAULT_MODEL
-    if settings.model_provider == "backboard" and settings.backboard_llm_provider == "google":
-        return GEMMA_DEFAULT_MODEL
+    if settings.model_provider == "backboard":
+        if settings.backboard_llm_provider == "google":
+            return GEMMA_DEFAULT_MODEL
+        return BACKBOARD_OPENAI_DEFAULT_MODEL
     return OPENAI_DEFAULT_MODEL
 
 
