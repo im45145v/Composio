@@ -2,7 +2,7 @@
 
 An OAuth setup library for Composio. It shows the work required to configure a provider app, whether Composio managed auth is enough, what can block a launch, and which steps a person still has to do.
 
-**Hosted app:** https://field-guide.onrender.com
+**Hosted app:** https://field-guide-jun3.onrender.com
 
 That address serves the library and the API. Research is on when the host has both API keys. A free Render service sleeps after inactivity, and the first request after that can take a minute.
 
