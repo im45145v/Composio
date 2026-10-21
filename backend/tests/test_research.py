@@ -1,0 +1,447 @@
+"""Research runs against fake search, page, and model adapters. No paid APIs."""
+
+from __future__ import annotations
+
+import json
+from dataclasses import replace
+from datetime import datetime, timezone
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.research.errors import ModelError, SearchError
+from app.research.reader import FetchedPage
+from app.research.search import SearchHit
+
+EXAMPLE_DOCS = "https://docs.example.com/oauth"
+COMPOSIO_DOCS = "https://docs.composio.dev/toolkits/example"
+EXAMPLE_TEXT = (
+    "Example uses OAuth 2.0. Create an OAuth app in the developer settings. "
+    "The end user must approve the requested scopes."
+)
+COMPOSIO_TEXT = (
+    "Composio-managed OAuth is available for Example. "
+    "You do not need to register an OAuth app to use managed auth. "
+    "Bring your own client for branding or custom scopes. "
+    "Register the redirect URI https://backend.composio.dev/api/v3/toolkits/auth/callback."
+)
+
+
+def _claim(value, status, evidence, note=None):
+    return {"value": value, "status": status, "note": note, "evidence_ids": evidence}
+
+
+def valid_draft() -> dict:
+    return {
+        "summary": "Example uses OAuth 2.0 and can use Composio managed auth or a developer-owned client.",
+        "decision": "Use managed auth when Composio's app is enough. Bring your own client for branding or custom scopes.",
+        "auth_type": _claim("Example uses OAuth 2.0.", "documented", ["e1"]),
+        "setup_path_value": "managed_or_own",
+        "setup_path_label": "Managed auth or your own app",
+        "setup_path_status": "documented",
+        "setup_path_note": None,
+        "setup_path_evidence_ids": ["e2"],
+        "difficulty": _claim(None, "unknown", []),
+        "active_effort": _claim(None, "unknown", []),
+        "approval_wait": _claim(None, "unknown", []),
+        "confidence": _claim(None, "unknown", []),
+        "managed": _claim("Composio-managed OAuth is available for Example.", "documented", ["e2"]),
+        "bring_your_own": _claim(
+            "Bring your own client for branding or custom scopes.",
+            "documented",
+            ["e2"],
+        ),
+        "redirect_uri": _claim(
+            "https://backend.composio.dev/api/v3/toolkits/auth/callback",
+            "documented",
+            ["e2"],
+        ),
+        "prerequisites": [
+            {
+                "title": "Developer settings",
+                "body": "Create an OAuth app in the developer settings.",
+                "status": "documented",
+                "note": None,
+                "evidence_ids": ["e1"],
+            }
+        ],
+        "steps": [
+            {
+                "title": "Create the OAuth app",
+                "body": "Create an OAuth app in the developer settings.",
+                "status": "documented",
+                "note": None,
+                "evidence_ids": ["e1"],
+            },
+            {
+                "title": "User approval",
+                "body": "The end user must approve the requested scopes.",
+                "status": "documented",
+                "note": None,
+                "evidence_ids": ["e1"],
+            },
+        ],
+        "blockers": [],
+        "human_actions": [
+            {
+                "title": "The end user approves access",
+                "body": "The end user must approve the requested scopes.",
+                "status": "documented",
+                "note": None,
+                "evidence_ids": ["e1"],
+            }
+        ],
+        "conflicts": [],
+    }
+
+
+class FakeSearch:
+    def __init__(self, hits=None, error: Exception | None = None) -> None:
+        self.hits = hits if hits is not None else [
+            SearchHit("Example OAuth", EXAMPLE_DOCS),
+            SearchHit("Example toolkit", COMPOSIO_DOCS),
+        ]
+        self.error = error
+        self.queries: list[str] = []
+
+    def search(self, query: str, *, limit: int):
+        self.queries.append(query)
+        if self.error:
+            raise self.error
+        return self.hits[:limit]
+
+
+class FakeReader:
+    def __init__(self, pages: dict[str, tuple[str, str]]) -> None:
+        self.pages = pages
+        self.urls: list[str] = []
+
+    def read(self, url: str) -> FetchedPage:
+        self.urls.append(url)
+        title, text = self.pages[url]
+        return FetchedPage(url=url, title=title, text=text, retrieved_at=datetime.now(timezone.utc))
+
+
+class FakeModel:
+    def __init__(self, payload, error: Exception | None = None) -> None:
+        self.payload = payload
+        self.error = error
+        self.systems: list[str] = []
+        self.users: list[str] = []
+
+    def complete(self, *, system: str, user: str) -> str:
+        self.systems.append(system)
+        self.users.append(user)
+        if self.error:
+            raise self.error
+        if isinstance(self.payload, str):
+            return self.payload
+        return json.dumps(self.payload)
+
+
+def _statuses(value, found: list[str]) -> None:
+    if isinstance(value, dict):
+        if "status" in value and isinstance(value["status"], str):
+            found.append(value["status"])
+        for child in value.values():
+            _statuses(child, found)
+    elif isinstance(value, list):
+        for child in value:
+            _statuses(child, found)
+
+
+def read_events(client: TestClient, run_id: str, after: int | None = None) -> list[dict]:
+    headers = {"Last-Event-ID": str(after)} if after is not None else None
+    with client.stream("GET", f"/api/research-runs/{run_id}/events", headers=headers) as response:
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/event-stream")
+        raw = "".join(response.iter_text())
+    events = []
+    for block in raw.split("\n\n"):
+        if not block.strip() or block.lstrip().startswith(":"):
+            continue
+        lines = [line for line in block.split("\n") if line]
+        event_name = next(line.removeprefix("event: ") for line in lines if line.startswith("event: "))
+        data = next(line.removeprefix("data: ") for line in lines if line.startswith("data: "))
+        event_id = next(int(line.removeprefix("id: ")) for line in lines if line.startswith("id: "))
+        events.append({"id": event_id, "event": event_name, "data": json.loads(data)})
+    return events
+
+
+@pytest.fixture
+def research_app(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'guides.db'}")
+    monkeypatch.setenv("SEED_ON_STARTUP", "true")
+    monkeypatch.setenv("RESEARCH_INLINE", "true")
+    from app.main import create_app
+
+    application = create_app()
+    search = FakeSearch()
+    reader = FakeReader(
+        {
+            EXAMPLE_DOCS: ("Example OAuth", EXAMPLE_TEXT),
+            COMPOSIO_DOCS: ("Example toolkit", COMPOSIO_TEXT),
+        }
+    )
+    model = FakeModel(valid_draft())
+    application.state.research = replace(
+        application.state.research,
+        configured=True,
+        inline=True,
+        search=search,
+        model=model,
+        reader=reader,
+        unavailable_reason=None,
+    )
+    application.state.fakes = {"search": search, "reader": reader, "model": model}
+    return application
+
+
+def test_successful_run_persists_a_shareable_guide(research_app):
+    with TestClient(research_app) as client:
+        assert client.get("/api/health").json()["research"] == "configured"
+        response = client.post(
+            "/api/research-requests",
+            json={"app_name": "Example", "docs_url": EXAMPLE_DOCS},
+        )
+        assert response.status_code == 202
+        body = response.json()
+        assert body["guide_created"] is True
+        assert body["guide_url"] == "/guides/example"
+        guide = client.get("/api/guides/example")
+        assert guide.status_code == 200
+        payload = guide.json()
+        assert payload["tested"] is False
+        assert payload["auth_type"]["value"] == "Example uses OAuth 2.0."
+        assert payload["auth_type"]["status"] == "documented"
+        assert payload["approval_wait"]["value"] is None
+        assert payload["approval_wait"]["status"] == "unknown"
+        assert payload["active_effort"]["status"] == "unknown"
+        assert payload["composio"]["redirect_uri"]["value"].startswith("https://backend.composio.dev/")
+        statuses: list[str] = []
+        _statuses(payload, statuses)
+        assert "verified" not in statuses
+        urls = [source["url"] for source in payload["sources"]]
+        assert EXAMPLE_DOCS in urls
+        assert COMPOSIO_DOCS in urls
+        run = client.get(f"/api/research-runs/{body['run_id']}").json()
+        assert run["status"] == "completed"
+        assert run["evidence"]
+        assert run["evidence"][0]["retrieved_at"]
+        assert any(item["supports"] for item in run["evidence"])
+        prompt = research_app.state.fakes["model"].users[0]
+        assert "Example uses OAuth 2.0." in prompt
+        assert "untrusted data" in prompt
+        assert "prior knowledge" in research_app.state.fakes["model"].systems[0].lower()
+        events = read_events(client, body["run_id"])
+        stages = [event["data"]["stage"] for event in events]
+        assert "searching" in stages
+        assert "reading" in stages
+        assert any(event["event"] == "finding" for event in events)
+        assert events[-1]["event"] == "terminal"
+        assert events[-1]["data"]["status"] == "completed"
+        replay = read_events(client, body["run_id"], after=events[0]["id"])
+        assert events[0]["id"] not in [event["id"] for event in replay]
+        assert replay[-1]["data"]["status"] == "completed"
+
+
+def test_existing_guide_is_not_replaced(research_app):
+    with TestClient(research_app) as client:
+        before = client.get("/api/guides/github").json()
+        response = client.post("/api/research-requests", json={"app_name": "GitHub"})
+        assert response.status_code == 200
+        assert response.json()["code"] == "guide_exists"
+        assert response.json()["guide_url"] == "/guides/github"
+        assert client.get("/api/guides/github").json()["summary"] == before["summary"]
+        assert research_app.state.fakes["model"].systems == []
+        created = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        assert created.status_code == 202
+        research_app.state.fakes["model"].payload = valid_draft() | {
+            "summary": "This replacement must not be stored."
+        }
+        again = client.post("/api/research-requests", json={"app_name": "Example"})
+        assert again.status_code == 200
+        assert again.json()["code"] == "guide_exists"
+        assert "replacement" not in client.get("/api/guides/example").json()["summary"]
+
+
+def test_invalid_input_and_ssrf_urls_are_rejected(client, research_app):
+    with TestClient(research_app) as configured:
+        for docs_url in (
+            "http://127.0.0.1/secret",
+            "http://169.254.169.254/latest/meta-data",
+            "http://10.0.0.8/",
+            "http://localhost/admin",
+        ):
+            response = configured.post(
+                "/api/research-requests",
+                json={"app_name": "Example", "docs_url": docs_url},
+            )
+            assert response.status_code == 422
+            assert response.json()["detail"]["code"] in {"unsafe_url", "blocked_address", "unsupported_protocol"}
+        name_url = configured.post("/api/research-requests", json={"app_name": "http://127.0.0.1/latest"})
+        assert name_url.status_code == 422
+        assert configured.get("/api/guides").json()["count"] == 3
+    blank = client.post("/api/research-requests", json={"app_name": "   "})
+    assert blank.status_code == 422
+    private = client.post(
+        "/api/research-requests",
+        json={"app_name": "Notion", "docs_url": "http://192.168.1.20/docs"},
+    )
+    assert private.status_code == 422
+    assert client.get("/api/guides/notion").status_code == 404
+
+
+def test_search_failure_streams_a_terminal_error(research_app):
+    research_app.state.fakes["search"].error = SearchError("down", "search_failed")
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example"})
+        assert response.status_code == 202
+        assert response.json()["guide_created"] is False
+        events = read_events(client, response.json()["run_id"])
+        assert any(event["data"]["stage"] == "searching" for event in events)
+        assert events[-1]["event"] == "terminal"
+        assert events[-1]["data"]["status"] == "failed"
+        assert events[-1]["data"]["code"] == "search_failed"
+        assert client.get("/api/guides/example").status_code == 404
+        assert research_app.state.fakes["model"].systems == []
+
+
+def test_model_failure_does_not_save_a_guide(research_app):
+    research_app.state.fakes["model"].error = ModelError("down", "model_failed")
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "failed"
+        assert run["error_code"] == "model_failed"
+        assert client.get("/api/guides/example").status_code == 404
+
+
+def test_missing_evidence_does_not_fabricate_a_guide(research_app):
+    research_app.state.fakes["search"].hits = []
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example"})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "insufficient_evidence"
+        assert client.get("/api/guides/example").status_code == 404
+        assert research_app.state.fakes["model"].systems == []
+
+    research_app.state.fakes["search"].hits = [
+        SearchHit("Example OAuth", EXAMPLE_DOCS),
+        SearchHit("Example toolkit", COMPOSIO_DOCS),
+    ]
+    draft = valid_draft()
+    draft["auth_type"]["evidence_ids"] = []
+    draft["steps"][0]["evidence_ids"] = []
+    draft["steps"][1]["evidence_ids"] = []
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "insufficient_evidence"
+        assert "authentication type" in run["message"]
+        assert client.get("/api/guides/example").status_code == 404
+
+
+def test_conflicting_approval_waits_are_not_collapsed(research_app):
+    research_app.state.fakes["reader"].pages = {
+        EXAMPLE_DOCS: (
+            "Example OAuth",
+            EXAMPLE_TEXT + " Sensitive-scope verification typically takes 3-5 business days.",
+        ),
+        COMPOSIO_DOCS: (
+            "Example toolkit",
+            COMPOSIO_TEXT + " The verification FAQ lists sensitive scope verification as 10 business days.",
+        ),
+    }
+    draft = valid_draft()
+    draft["approval_wait"] = _claim("3-5 business days", "documented", ["e1"])
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        assert response.status_code == 202
+        guide = client.get("/api/guides/example").json()
+        assert guide["approval_wait"]["status"] == "unknown"
+        assert guide["approval_wait"]["value"] is None
+        note = guide["approval_wait"]["note"]
+        assert "3-5 business days" in note
+        assert "10 business days" in note
+        assert "neither" in note.lower()
+
+
+def test_malformed_model_output_is_rejected(research_app):
+    research_app.state.fakes["model"].payload = "not json"
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["error_code"] == "malformed_output"
+        assert client.get("/api/guides/example").status_code == 404
+
+
+def test_credentials_in_model_output_are_not_stored(research_app):
+    secret = "supersecretvalue12"
+    research_app.state.fakes["model"].payload = json.dumps(valid_draft()).replace(
+        "Example uses OAuth 2.0.",
+        f"client_secret: {secret}",
+    )
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["error_code"] == "credentials_in_output"
+        assert secret not in json.dumps(run)
+        assert client.get("/api/guides/example").status_code == 404
+
+
+def test_duplicate_submission_joins_the_running_job(tmp_path, monkeypatch):
+    import threading
+
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'guides.db'}")
+    monkeypatch.setenv("SEED_ON_STARTUP", "true")
+    monkeypatch.setenv("RESEARCH_INLINE", "false")
+    from app.main import create_app
+
+    class BlockingSearch(FakeSearch):
+        def __init__(self) -> None:
+            super().__init__()
+            self.started = threading.Event()
+            self.release = threading.Event()
+
+        def search(self, query: str, *, limit: int):
+            self.queries.append(query)
+            self.started.set()
+            assert self.release.wait(5)
+            raise SearchError("down", "search_failed")
+
+    application = create_app()
+    search = BlockingSearch()
+    application.state.research = replace(
+        application.state.research,
+        configured=True,
+        inline=False,
+        search=search,
+        model=FakeModel(valid_draft()),
+        reader=FakeReader({EXAMPLE_DOCS: ("Example OAuth", EXAMPLE_TEXT)}),
+        unavailable_reason=None,
+    )
+    with TestClient(application) as client:
+        first = client.post("/api/research-requests", json={"app_name": "Example"})
+        assert first.status_code == 202
+        assert search.started.wait(5)
+        second = client.post("/api/research-requests", json={"app_name": "Example"})
+        assert second.status_code == 200
+        assert second.json()["code"] == "research_in_progress"
+        assert second.json()["run_id"] == first.json()["run_id"]
+        search.release.set()
+        events = read_events(client, first.json()["run_id"])
+        assert events[-1]["data"]["code"] == "search_failed"
+        assert client.get("/api/guides/example").status_code == 404
+
+
+def test_timeout_fails_the_run(research_app):
+    research_app.state.research = replace(research_app.state.research, deadline_seconds=0)
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example"})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "failed"
+        assert run["error_code"] == "timeout"
+        assert client.get("/api/guides/example").status_code == 404
