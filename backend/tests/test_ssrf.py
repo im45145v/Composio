@@ -22,6 +22,21 @@ class StaticResolver:
         return [ipaddress.ip_address(self.mapping[host])]
 
 
+def test_screen_blocks_shorthand_and_multicast_addresses():
+    for raw in (
+        "http://127.1/",
+        "http://10.1/",
+        "http://192.168.1/",
+        "http://172.16.1/",
+        "http://0177.0.0.1/",
+        "http://0x7f.0x0.0x0.0x1/",
+        "http://224.0.0.1/",
+        "http://0300.0250.0001.0001/",
+    ):
+        with pytest.raises(UnsafeURL):
+            screen_url(raw)
+
+
 def test_screen_blocks_private_metadata_and_unsupported_schemes():
     for raw in (
         "http://127.0.0.1/secret",

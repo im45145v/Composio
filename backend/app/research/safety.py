@@ -27,6 +27,8 @@ EXTRA_BLOCKED = (
 )
 OCTAL_HOST = re.compile(r"(?:0\d+\.){3}0\d+")
 HEX_HOST = re.compile(r"0x[0-9a-f]+", re.IGNORECASE)
+# inet_aton accepts shorthand (127.1), octal (0177.0.0.1), and dotted hex.
+NUMERIC_HOST = re.compile(r"^(?:0x[0-9a-f]+|\d+)(?:\.(?:0x[0-9a-f]+|\d+))*$", re.IGNORECASE)
 
 
 class Resolver:
@@ -57,6 +59,11 @@ def ip_literal(host: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address | Non
         number = int(host)
         if 0 <= number <= 0xFFFFFFFF:
             parsed = ipaddress.IPv4Address(number)
+    if parsed is None and NUMERIC_HOST.fullmatch(host):
+        try:
+            parsed = ipaddress.IPv4Address(socket.inet_aton(host))
+        except OSError:
+            parsed = None
     if isinstance(parsed, ipaddress.IPv6Address) and parsed.ipv4_mapped is not None:
         parsed = parsed.ipv4_mapped
     return parsed
@@ -66,6 +73,8 @@ def is_public_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped is not None:
         ip = ip.ipv4_mapped
     if any(ip in network for network in EXTRA_BLOCKED):
+        return False
+    if ip.is_multicast or ip.is_unspecified or ip.is_reserved or ip.is_loopback or ip.is_link_local or ip.is_private:
         return False
     return bool(ip.is_global)
 

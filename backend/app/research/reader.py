@@ -124,6 +124,8 @@ class PageReader:
                 return self._fetch(current)
             except httpx.TimeoutException as exc:
                 raise TransientFailure("The page request timed out.", "page_timeout") from exc
+            except httpx.InvalidURL as exc:
+                raise UnsafeURL("That address is not a public website.", code="blocked_address") from exc
             except httpx.TransportError as exc:
                 raise TransientFailure("The page could not be reached.", "page_unavailable") from exc
 

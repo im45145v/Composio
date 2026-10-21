@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import httpx
 
 from app.research.llm import AnthropicModel, OpenAIModel
@@ -73,6 +75,31 @@ def test_anthropic_adapter_reads_text_blocks():
         user="user",
     )
     assert text == "{\"ok\": true}"
+
+
+def test_env_file_fills_unset_keys_only(tmp_path, monkeypatch):
+    from app.config import load_env_file
+
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "\n".join(
+            [
+                "# comment",
+                "export MODEL_PROVIDER=anthropic",
+                "MODEL_API_KEY=from-file",
+                'SEARCH_API_KEY="from-file"',
+                "",
+            ]
+        )
+    )
+    monkeypatch.setenv("MODEL_API_KEY", "from-env")
+    monkeypatch.delenv("SEARCH_API_KEY", raising=False)
+    monkeypatch.delenv("MODEL_PROVIDER", raising=False)
+    load_env_file(env_file)
+    assert os.environ["MODEL_API_KEY"] == "from-env"
+    assert os.environ["SEARCH_API_KEY"] == "from-file"
+    assert os.environ["MODEL_PROVIDER"] == "anthropic"
+    load_env_file(tmp_path / "missing.env")
 
 
 def test_factory_selects_the_configured_vendors(tmp_path, monkeypatch):
