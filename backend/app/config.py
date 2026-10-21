@@ -103,7 +103,7 @@ def load_settings() -> Settings:
         search_api_key=_optional("SEARCH_API_KEY"),
         research_inline=_flag("RESEARCH_INLINE", "false"),
         page_timeout_seconds=_number("PAGE_TIMEOUT_SECONDS", 10),
-        page_max_bytes=int(_number("PAGE_MAX_BYTES", 500_000)),
+        page_max_bytes=int(_number("PAGE_MAX_BYTES", 1_200_000)),
         max_research_pages=int(_number("MAX_RESEARCH_PAGES", 4)),
         max_search_results=int(_number("MAX_SEARCH_RESULTS", 5)),
         model_timeout_seconds=_number("MODEL_TIMEOUT_SECONDS", 45),

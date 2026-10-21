@@ -376,6 +376,56 @@ def test_conflicting_approval_waits_are_not_collapsed(research_app):
         assert "neither" in note.lower()
 
 
+def test_a_dict_setup_path_still_saves(research_app):
+    draft = valid_draft()
+    draft["setup_path_value"] = {"value": "managed_or_own"}
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "completed"
+        assert run["error_code"] is None
+
+
+def test_a_missing_decision_uses_the_summary(research_app):
+    draft = valid_draft()
+    draft["decision"] = None
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        assert response.status_code == 202
+        guide = client.get("/api/guides/example").json()
+        assert len(guide["summary"]) >= 12
+        assert len(guide["composio"]["decision"]) >= 12
+        assert client.get(f"/api/research-runs/{response.json()['run_id']}").json()["status"] == "completed"
+
+
+def test_null_action_lists_reuse_cited_steps(research_app):
+    draft = valid_draft()
+    draft["human_actions"] = None
+    draft["blockers"] = None
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        assert response.status_code == 202
+        guide = client.get("/api/guides/example").json()
+        assert guide["human_actions"]
+        assert guide["human_actions"][0]["body"]
+
+
+def test_a_string_claim_is_not_stored_as_cited(research_app):
+    draft = valid_draft()
+    draft["auth_type"] = "Example uses OAuth 2.0."
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "insufficient_evidence"
+        assert "authentication type" in run["message"]
+        assert client.get("/api/guides/example").status_code == 404
+        assert len(research_app.state.fakes["model"].users) == 2
+
+
 def test_malformed_model_output_is_rejected(research_app):
     research_app.state.fakes["model"].payload = "not json"
     with TestClient(research_app) as client:
@@ -459,18 +509,92 @@ def test_missing_human_action_does_not_save_a_guide(research_app):
 def test_page_budget_keeps_provider_and_composio_pages():
     from app.research.pipeline import _select_urls
 
-    hits = [SearchHit(f"Composio {index}", f"https://docs.composio.dev/page-{index}") for index in range(6)]
+    hits = [SearchHit(f"Unrelated {index}", f"https://docs.composio.dev/page-{index}") for index in range(5)]
+    hits.append(SearchHit("Vendor on Composio", "https://docs.composio.dev/toolkits/vendor"))
     hits.append(SearchHit("Vendor OAuth", "https://developer.vendor.example/docs/oauth"))
+    hits.append(SearchHit("Box OAuth", "https://developer.box.com/guides/oauth"))
+    hits.append(SearchHit("Vendor funding round", "https://finance.yahoo.com/news/vendor-raises"))
+    hits.append(SearchHit("Vendor scopes", "https://developer.vendor.example/docs/scopes"))
+    hits.append(SearchHit("Another Composio page", "https://docs.composio.dev/toolkits/vendor/extra"))
     urls = _select_urls(
         hits,
         "https://docs.vendor.example/register",
         4,
+        app_name="Vendor",
         screen=lambda url: url,
     )
     assert urls[0] == "https://docs.vendor.example/register"
     assert "https://developer.vendor.example/docs/oauth" in urls
-    assert any(url.startswith("https://docs.composio.dev/") for url in urls)
+    assert "https://docs.composio.dev/toolkits/vendor" in urls
+    assert "https://developer.vendor.example/docs/scopes" in urls
+    assert "https://docs.composio.dev/toolkits/vendor/extra" not in urls
+    assert not any("box.com" in url for url in urls)
+    assert not any("yahoo.com" in url for url in urls)
     assert len(urls) == 4
+
+
+def test_missing_steps_are_recovered_from_human_actions(research_app):
+    draft = valid_draft()
+    draft["steps"] = None
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "completed"
+        guide = client.get("/api/guides/example").json()
+        assert guide["steps"]
+
+
+def test_an_off_topic_page_is_not_saved_as_the_app(research_app):
+    box = "https://developer.box.com/guides/authentication/oauth2/oauth2-setup"
+    research_app.state.fakes["search"].hits = [SearchHit("Box OAuth", box)]
+    research_app.state.fakes["reader"].pages[box] = (
+        "Setup with OAuth 2.0 - Box Dev Docs",
+        "Log into your Box account and open the Developer Console.",
+    )
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Todoist", "docs_url": box})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "insufficient_evidence"
+        assert "Todoist" in run["message"]
+        assert client.get("/api/guides/todoist").status_code == 404
+        assert research_app.state.fakes["model"].systems == []
+
+
+def test_a_documented_claim_that_drops_a_condition_is_inferred():
+    from app.research.validate import EvidencePage, validate_draft
+
+    pages = [
+        EvidencePage(
+            key="e1",
+            url=EXAMPLE_DOCS,
+            title="Example OAuth",
+            text=EXAMPLE_TEXT + " Public connections must undergo a security review before being listed.",
+            preferred=True,
+            retrieved_at=datetime.now(timezone.utc),
+        ),
+        EvidencePage(
+            key="e2",
+            url=COMPOSIO_DOCS,
+            title="Example toolkit",
+            text=COMPOSIO_TEXT,
+            preferred=True,
+            retrieved_at=datetime.now(timezone.utc),
+        ),
+    ]
+    draft = valid_draft()
+    draft["blockers"] = [
+        {
+            "title": "Security review",
+            "body": "Public connections must undergo a security review.",
+            "status": "documented",
+            "note": None,
+            "evidence_ids": ["e1"],
+        }
+    ]
+    checked = validate_draft(json.dumps(draft), pages)
+    assert checked.blockers[0].status == "inferred"
+    assert "before" in (checked.blockers[0].note or "").lower()
 
 
 def test_restart_releases_a_dead_research_lock(tmp_path, monkeypatch):
@@ -532,10 +656,13 @@ def test_restart_releases_a_dead_research_lock(tmp_path, monkeypatch):
 def test_fenced_model_json_is_validated_and_saved(research_app):
     research_app.state.fakes["model"].payload = "Here is the guide:\n```json\n" + json.dumps(valid_draft()) + "\n```"
     with TestClient(research_app) as client:
-        response = client.post("/api/research-requests", json={"app_name": "Fenced"})
+        response = client.post(
+            "/api/research-requests",
+            json={"app_name": "Example", "docs_url": EXAMPLE_DOCS},
+        )
         assert response.status_code == 202
         assert response.json()["guide_created"] is True
-        guide = client.get("/api/guides/fenced")
+        guide = client.get("/api/guides/example")
         assert guide.status_code == 200
         assert guide.json()["auth_type"]["source_url"] == EXAMPLE_DOCS
 

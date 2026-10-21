@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -109,6 +110,24 @@ def _preferred(evidence_ids: list[str], pages: dict[str, EvidencePage]) -> bool:
     return any(pages[item].preferred for item in evidence_ids if item in pages)
 
 
+_CONDITIONAL = re.compile(r"\b(before|unless|except|only if)\b", re.IGNORECASE)
+
+
+def _omitted_condition(claim: str, evidence: str) -> str | None:
+    best = ""
+    best_score = 0.0
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", evidence):
+        score = _overlap(claim, sentence)
+        if score > best_score:
+            best, best_score = sentence, score
+    if best_score < 0.4:
+        return None
+    match = _CONDITIONAL.search(best)
+    if match is None or match.group(1).lower() in claim.lower():
+        return None
+    return " ".join(best.split())[:300]
+
+
 def _append_note(note: str | None, extra: str) -> str:
     if not note:
         return extra
@@ -200,6 +219,10 @@ def _assess(
                 break
     if status != "unknown" and not value:
         status = "unknown"
+    omitted = _omitted_condition(compared, evidence) if status == "documented" and compared else None
+    if omitted:
+        status = "inferred"
+        note = _append_note(note, f"The cited page adds a condition this claim omits: {omitted}")
     return CheckedClaim(value=value, status=status, note=note, evidence_ids=evidence_ids if status != "unknown" else evidence_ids)
 
 
@@ -241,6 +264,184 @@ def _apply_wait_conflict(claim: CheckedClaim, pages: dict[str, EvidencePage]) ->
     return CheckedClaim(value=None, status="unknown", note=note, evidence_ids=claim.evidence_ids), note
 
 
+_CLAIM_FIELDS = (
+    "auth_type",
+    "difficulty",
+    "active_effort",
+    "approval_wait",
+    "confidence",
+    "managed",
+    "bring_your_own",
+    "redirect_uri",
+)
+_ITEM_FIELDS = ("prerequisites", "steps", "blockers", "human_actions")
+_STATUSES = {"documented", "inferred", "unknown"}
+
+
+def _id_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    ids: list[str] = []
+    for item in value:
+        if isinstance(item, str) and item.strip():
+            ids.append(item.strip())
+        elif isinstance(item, int) and not isinstance(item, bool):
+            ids.append(str(item))
+    return ids
+
+
+def _text_value(value: object) -> str | None:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    return None
+
+
+def _status(value: object) -> str:
+    if isinstance(value, str) and value in _STATUSES:
+        return value
+    return "unknown"
+
+
+def _as_claim(value: object) -> dict:
+    if isinstance(value, dict):
+        return {
+            "value": _text_value(value.get("value")),
+            "status": _status(value.get("status")),
+            "note": value.get("note") if isinstance(value.get("note"), str) else None,
+            "evidence_ids": _id_list(value.get("evidence_ids")),
+        }
+    if isinstance(value, (str, int, float, bool)):
+        return {"value": _text_value(value), "status": "unknown", "note": None, "evidence_ids": []}
+    return {"value": None, "status": "unknown", "note": None, "evidence_ids": []}
+
+
+def _as_item(value: object) -> dict | None:
+    if isinstance(value, str):
+        body = " ".join(value.split())
+        if len(body) < 12:
+            return None
+        return {"title": body[:80], "body": body[:2000], "status": "unknown", "note": None, "evidence_ids": []}
+    if not isinstance(value, dict):
+        return None
+    title = _text_value(value.get("title") or value.get("name") or value.get("heading") or value.get("step"))
+    body = _text_value(
+        value.get("body")
+        or value.get("text")
+        or value.get("description")
+        or value.get("detail")
+        or value.get("details")
+        or value.get("content")
+        or value.get("instruction")
+    )
+    body = " ".join(body.split()) if body else ""
+    title = " ".join(title.split()) if title else ""
+    if len(body) < 12:
+        body = title if len(title) >= 12 else ""
+    if len(body) < 12:
+        return None
+    if len(title) < 3:
+        title = body[:80]
+    return {
+        "title": title[:200],
+        "body": body[:2000],
+        "status": _status(value.get("status")),
+        "note": value.get("note") if isinstance(value.get("note"), str) else None,
+        "evidence_ids": _id_list(value.get("evidence_ids")),
+    }
+
+
+def _item_list(value: object, *, limit: int = 12) -> list[dict]:
+    if isinstance(value, dict):
+        value = [value]
+    elif isinstance(value, str):
+        value = [value]
+    elif not isinstance(value, list):
+        return []
+    items = [_as_item(item) for item in value]
+    return [item for item in items if item is not None][:limit]
+
+
+def _long_text(value: object, *, minimum: int = 12) -> str | None:
+    if not isinstance(value, str):
+        return None
+    text = " ".join(value.split())
+    if len(text) < minimum:
+        return None
+    return text[:2000]
+
+
+def _normalize_draft(data: dict) -> dict:
+    """Models sometimes flatten a claim to a string and send null for a list."""
+
+    normalized = dict(data)
+    for key in _CLAIM_FIELDS:
+        normalized[key] = _as_claim(data.get(key))
+    for key in _ITEM_FIELDS:
+        normalized[key] = _item_list(data.get(key))
+    if not normalized["steps"]:
+        for alias in ("instructions", "procedure", "registration_steps"):
+            recovered = _item_list(data.get(alias))
+            if recovered:
+                normalized["steps"] = recovered
+                break
+    if not normalized["steps"] and not isinstance(data.get("steps"), list) and normalized["human_actions"]:
+        normalized["steps"] = [dict(item) for item in normalized["human_actions"]]
+    if not isinstance(data.get("human_actions"), list) and normalized["steps"]:
+        normalized["human_actions"] = [dict(item) for item in normalized["steps"]]
+    conflicts = data.get("conflicts")
+    kept: list[dict] = []
+    if isinstance(conflicts, list):
+        for item in conflicts:
+            if not isinstance(item, dict):
+                continue
+            topic = _text_value(item.get("topic"))
+            summary = _text_value(item.get("summary"))
+            if not topic or not summary or len(topic) < 3 or len(summary) < 3:
+                continue
+            kept.append({"topic": topic[:120], "summary": summary[:1000], "evidence_ids": _id_list(item.get("evidence_ids"))})
+    normalized["conflicts"] = kept
+    status = data.get("setup_path_status")
+    normalized["setup_path_status"] = status if isinstance(status, str) and status in _STATUSES else "unknown"
+    note = data.get("setup_path_note")
+    normalized["setup_path_note"] = note if isinstance(note, str) else None
+    normalized["setup_path_evidence_ids"] = _id_list(data.get("setup_path_evidence_ids"))
+    setup_value = data.get("setup_path_value")
+    if isinstance(setup_value, dict):
+        setup_value = setup_value.get("value")
+    if setup_value not in {"managed_or_own", "own_app_unless_confirmed"}:
+        normalized["setup_path_value"] = "own_app_unless_confirmed"
+    else:
+        normalized["setup_path_value"] = setup_value
+    label = _long_text(data.get("setup_path_label"), minimum=3)
+    normalized["setup_path_label"] = (label or "Setup path")[:160]
+    summary = _long_text(data.get("summary"))
+    decision = _long_text(data.get("decision"))
+    step_text = _long_text(normalized["steps"][0]["body"]) if normalized["steps"] else None
+    summary = summary or decision or step_text or "The retrieved pages were read for this guide."
+    if re.search(r"\b(this json|json object)\b", summary, flags=re.IGNORECASE) and step_text:
+        summary = step_text
+    decision = decision or "The retrieved pages do not state a separate setup decision."
+    decision = re.sub(r"managed_or_own", "managed auth or your own app", decision, flags=re.IGNORECASE)
+    normalized["summary"] = summary
+    normalized["decision"] = decision
+    if not normalized["steps"]:
+        normalized["steps"] = [
+            {
+                "title": "Setup",
+                "body": summary[:2000],
+                "status": "unknown",
+                "note": None,
+                "evidence_ids": [],
+            }
+        ]
+    normalized["conflicts"] = normalized["conflicts"][:8]
+    return normalized
+
+
 def _json_object(raw: str) -> str:
     """Take the JSON object out of a fenced or prefaced model response."""
 
@@ -262,7 +463,15 @@ def validate_draft(raw: str, pages: list[EvidencePage]) -> CheckedGuide:
     if contains_secret(payload):
         raise CredentialsInOutput()
     by_key = {page.key: page for page in pages}
-    draft = DraftGuide.model_validate_json(payload)
+    try:
+        parsed = json.loads(payload)
+    except json.JSONDecodeError:
+        draft = DraftGuide.model_validate_json(payload)
+    else:
+        if isinstance(parsed, dict):
+            draft = DraftGuide.model_validate(_normalize_draft(parsed))
+        else:
+            draft = DraftGuide.model_validate_json(payload)
     if contains_secret(draft.model_dump_json()):
         raise CredentialsInOutput()
 

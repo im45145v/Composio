@@ -112,18 +112,19 @@ def test_reader_pins_each_redirect_and_keeps_the_public_url():
     ]
 
 
-def test_reader_skips_script_text_and_limits_size():
+def test_reader_reads_markdown_and_keeps_a_prefix_of_a_large_page():
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/oauth":
             html = "<html><head><title>OAuth</title><script>alert(1)</script></head><body><p>Create an OAuth app.</p></body></html>"
             return httpx.Response(200, headers={"content-type": "text/html; charset=utf-8"}, text=html)
+        if request.url.path == "/notes":
+            return httpx.Response(
+                200,
+                headers={"content-type": "text/markdown; charset=utf-8"},
+                text="---\ntitle: Notes\n---\n# OAuth\n\nCreate an OAuth app in settings.",
+            )
         return httpx.Response(200, headers={"content-type": "text/plain"}, content=b"x" * 50)
 
-    reader = PageReader(
-        resolver=StaticResolver({"docs.example": "93.184.216.34"}),
-        transport=httpx.MockTransport(handler),
-        max_bytes=20,
-    )
     page = PageReader(
         resolver=StaticResolver({"docs.example": "93.184.216.34"}),
         transport=httpx.MockTransport(handler),
@@ -133,11 +134,20 @@ def test_reader_skips_script_text_and_limits_size():
     assert "Create an OAuth app." in page.text
     assert "alert" not in page.text
 
-    from app.research.errors import ReaderError
+    notes = PageReader(
+        resolver=StaticResolver({"docs.example": "93.184.216.34"}),
+        transport=httpx.MockTransport(handler),
+    ).read("https://docs.example/notes")
+    assert notes.title == "OAuth"
+    assert "Create an OAuth app in settings." in notes.text
+    assert "title: Notes" not in notes.text
 
-    with pytest.raises(ReaderError) as caught:
-        reader.read("https://docs.example/big")
-    assert caught.value.code == "page_too_large"
+    clipped = PageReader(
+        resolver=StaticResolver({"docs.example": "93.184.216.34"}),
+        transport=httpx.MockTransport(handler),
+        max_bytes=20,
+    ).read("https://docs.example/big")
+    assert clipped.text == "x" * 20
 
 
 def test_reader_refuses_a_hostname_that_resolves_privately():

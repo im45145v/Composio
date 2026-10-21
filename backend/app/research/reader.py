@@ -22,7 +22,14 @@ from app.research.safety import (
 
 REDIRECTS = {301, 302, 303, 307, 308}
 USER_AGENT = "FieldGuideResearch/0.2"
-ALLOWED_TYPES = ("text/html", "text/plain", "application/xhtml+xml", "application/json")
+ALLOWED_TYPES = (
+    "text/html",
+    "text/plain",
+    "text/markdown",
+    "application/xhtml+xml",
+    "application/markdown",
+    "application/json",
+)
 
 
 @dataclass(frozen=True)
@@ -99,6 +106,25 @@ def _choose_address(
     return addresses[0]
 
 
+def _markdown_document(decoded: str) -> tuple[str, str]:
+    text = decoded.lstrip("\ufeff").lstrip()
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            text = text[end + 4 :].lstrip()
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    heading = next((line.lstrip("#").strip() for line in lines if line.startswith("#")), "")
+    title = heading[:200] if heading else (lines[0][:200] if lines else "Untitled page")
+    body_lines: list[str] = []
+    skipped = False
+    for line in lines:
+        if not skipped and heading and line.startswith("#") and line.lstrip("#").strip() == heading:
+            skipped = True
+            continue
+        body_lines.append(line)
+    return title or "Untitled page", "\n".join(body_lines or lines)
+
+
 def extract_text(body: bytes, content_type: str, max_chars: int) -> tuple[str, str]:
     if "\x00" in body.decode("latin-1"):
         raise ReaderError("The page is not a text document.", "unsupported_type")
@@ -113,9 +139,7 @@ def extract_text(body: bytes, content_type: str, max_chars: int) -> tuple[str, s
         title = parser.title or "Untitled page"
         text = parser.text
     else:
-        lines = [line.strip() for line in decoded.splitlines() if line.strip()]
-        title = lines[0][:200] if lines else "Untitled page"
-        text = "\n".join(lines)
+        title, text = _markdown_document(decoded)
     text = "".join(char for char in text if char in "\n\t" or ord(char) >= 32)
     if not text.strip():
         raise ReaderError("The page had no readable text.", "empty_page")
@@ -161,7 +185,10 @@ class PageReader:
 
         parsed = urlsplit(logical_url)
         host = parsed.hostname or ""
-        headers = {"User-Agent": USER_AGENT, "Accept": "text/html,text/plain,application/xhtml+xml"}
+        headers = {
+            "User-Agent": USER_AGENT,
+            "Accept": "text/markdown, text/html, text/plain, application/xhtml+xml",
+        }
         literal = ip_literal(host)
         if literal is not None:
             if not is_public_ip(literal):
@@ -207,9 +234,12 @@ class PageReader:
                     content_type = response.headers.get("content-type", "")
                     body = bytearray()
                     for chunk in response.iter_bytes():
-                        if len(body) + len(chunk) > self._max_bytes:
-                            raise ReaderError("The page is too large to read.", "page_too_large")
-                        body.extend(chunk)
+                        remaining = self._max_bytes - len(body)
+                        if remaining <= 0:
+                            break
+                        body.extend(chunk[:remaining])
+                        if len(chunk) > remaining:
+                            break
                     title, text = extract_text(bytes(body), content_type, self._max_chars)
                     return FetchedPage(
                         url=logical,
