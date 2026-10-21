@@ -6,6 +6,7 @@ export interface Claim {
   value: string | null;
   status: ClaimStatus;
   note: string | null;
+  source_url?: string | null;
 }
 
 export interface SetupPath {
@@ -13,6 +14,7 @@ export interface SetupPath {
   label: string;
   status: ClaimStatus;
   note: string | null;
+  source_url?: string | null;
 }
 
 export interface GuideItem {
@@ -21,6 +23,7 @@ export interface GuideItem {
   body: string;
   status: ClaimStatus;
   note: string | null;
+  source_url?: string | null;
 }
 
 export interface Source {

@@ -99,6 +99,8 @@ def test_guide_pages_are_persistent_and_separate_claims(client: TestClient):
         assert "verified" not in statuses
         assert "documented" in statuses
         assert "uncertain" in statuses
+        assert body["auth_type"]["source_url"] is None
+        assert body["steps"][0]["source_url"] is None
 
 
 def test_provider_waits_are_not_invented(client: TestClient):

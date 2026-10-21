@@ -27,6 +27,14 @@ export function claimText(value: string | null | undefined): string {
   return value && value.trim() ? value : "Unknown";
 }
 
+export function previewClaim(value: string | null | undefined, max = 110): string {
+  const text = claimText(value).replace(/\s+/g, " ").trim();
+  if (text.length <= max) {
+    return text;
+  }
+  return `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
 export const SETUP_FILTERS: { value: string; label: string }[] = [
   { value: "", label: "All paths" },
   { value: "managed_or_own", label: "Managed option" },

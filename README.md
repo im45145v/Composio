@@ -37,7 +37,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. The dev server proxies `/api` to http://127.0.0.1:8000.
+Open http://127.0.0.1:5173. The dev server listens on that address and proxies `/api` to http://127.0.0.1:8000.
 
 Copy `.env.example` to `backend/.env` to configure research. Leave the keys blank to run the library only. Never commit a filled-in key.
 
@@ -53,6 +53,41 @@ cd backend && python -m app.seed
 cd backend && .venv/bin/pytest
 cd frontend && npm test && npm run build
 ```
+
+The test suite mocks search, page fetches, and the model. It does not call a paid API.
+
+## Demo script
+
+1. Start the backend and frontend with the commands above. Open http://127.0.0.1:5173.
+2. Search `calendar`. Only Google Calendar remains. Clear the search. `not-a-provider` shows an empty library.
+3. Open GitHub, Google Calendar, and Slack from the list, then load http://127.0.0.1:5173/guides/slack directly. Each page lists sources and marks claims. None of them say Verified.
+4. Open Research an app and submit GitHub. The existing guide is returned and is not rewritten.
+5. Submit `Linear` with `https://developers.linear.app`. With both API keys unset, the page says research is not connected and no guide is stored. `http://127.0.0.1/secret` is rejected and does not start a run.
+6. With `MODEL_API_KEY` and `SEARCH_API_KEY` set, submit an app that is not in the library, such as Notion, and include its docs URL. Wait until the run says the guide was saved, then open the guide URL in a new tab. The claims that survived checking show the page they cite. Refresh the API process and open that same URL again.
+
+## Deploy
+
+Local development is the path above. A hosted copy is two services. This repository was not deployed as part of the write-up below.
+
+Backend, for example a Render web service with root directory `backend`:
+
+```bash
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Use Python 3.11, 3.12, or 3.13. Set the variables from `.env.example` in the host's environment, not in a committed file. `CORS_ORIGINS` must include the frontend origin, for example `https://field-guide.example.com`. Health check path: `/api/health`.
+
+SQLite lives on the service disk. On a host with an ephemeral filesystem, a redeploy or restart drops researched guides unless the database file is on a persistent disk and `DATABASE_URL` points at that file, for example `sqlite:////var/data/guides.db`. The three seeded guides are written again on startup. A research run that was still `queued` or `running` when the process stopped is marked failed, and that app name can be submitted again.
+
+Frontend, as a static site with root directory `frontend`:
+
+```bash
+npm install
+npm run build
+```
+
+Publish `dist`. The host must serve `index.html` for `/guides/*` and `/research`. Set `VITE_API_BASE_URL` to the public API prefix before the build, for example `https://field-guide-api.example.com/api`. The Vite dev server proxies `/api` and does not need that absolute URL.
 
 ## API
 
@@ -71,17 +106,28 @@ Guide addresses are the frontend routes above. A static host needs to serve `ind
 
 `MODEL_PROVIDER` is `openai` (default model `gpt-4o-mini`) or `anthropic` (default model `claude-sonnet-4-5`). `SEARCH_PROVIDER` is `tavily` or `brave`. `MODEL_NAME` overrides the model id.
 
-A run searches, fetches public pages, and asks the model to extract a guide from those pages only. Search snippets are not evidence. The model output is checked with Pydantic. Documented claims must cite a retrieved page and overlap its text. URLs and durations must appear in the cited page. If two retrieved pages give different review durations, the wait is stored as unknown and both figures are kept. A guide is saved only when an authentication type and at least one step survive that check. Output that contains a client secret, API key, or access token is discarded.
+A run searches, fetches public pages, and asks the model to extract a guide from those pages only. Search snippets are not evidence. The model output is checked with Pydantic. Documented claims must cite a retrieved page and overlap its text. URLs and durations must appear in the cited page. If two retrieved pages give different review durations, the wait is stored as unknown and both figures are kept. A guide is saved only when an authentication type, at least one step, and at least one human action survive that check. Each saved claim records the first cited page URL. Output that contains a client secret, API key, or access token is discarded.
+
+The reader keeps at most `MAX_RESEARCH_PAGES` URLs (default 4). Inside that budget it keeps the caller's documentation URL when one was submitted, the highest-scoring page that is not on `composio.dev`, and the highest-scoring Composio page, then fills the remaining slots by score.
 
 Pages are fetched with `trust_env` off, so `HTTP_PROXY` cannot point the reader at an internal service. Schemes other than http and https, embedded credentials, ports other than 80 and 443, localhost, private and link-local addresses, and cloud metadata addresses are rejected. Redirects are checked again before they are followed. Response bodies are capped and scripts are stripped, not executed.
+
+## Evidence
+
+Seeded guides were written from the pages in `docs/provider-research.md`, checked on 21 October 2026. Their source list is the citation panel on the guide. Individual seeded sentences are not each tied to one URL. A researched guide is different: a claim is stored only after it cites a page fetched for that run, and the guide shows that page's URL on the claim. The research run also stores the page title, retrieval time, and the claim keys that page supports.
+
+**Documented** means the cited page states the claim and this project did not run it. **Inferred** means the wording is a reading of the retrieved pages, not a direct statement. **Unknown** means those pages do not establish it. **Uncertain** is an editorial label or an open question, including difficulty and hands-on duration, which the providers do not publish as a rating or a measured time. **Verified** would mean this project executed the setup. Nothing in the seed or the research pipeline uses it.
+
+Approval waits are quoted only where a retrieved page states one. If two retrieved pages give different review durations, neither figure is chosen. GitHub's approval-wait text says the staff-review wait was not found; the mark is Documented because that absence is what the creation page shows, not because a duration was measured.
 
 ## Limitations
 
 - Research does not run an OAuth flow, so it never marks a claim verified.
 - JavaScript-only documentation is not executed, so a page that is empty without a browser can come back as unreadable.
 - Contradiction detection covers review durations. It does not settle every kind of disagreement.
+- The fetch budget is four pages. Reserving a provider page and a Composio page does not guarantee that the provider's registration page is the provider page that ranks highest.
 - HTTPS fetches re-resolve the hostname after the public-address check, so a fast DNS rebinding response is still a residual risk.
-- The duplicate lock is a row in SQLite. It covers threads in this process. Two servers writing the same database can still race at insert time; the slug unique constraint then keeps the first guide.
-- Seeded GitHub, Google Calendar, and Slack guides are left unchanged by later research.
+- A restart fails an in-flight run and releases that app name. The duplicate lock is still one SQLite row in this process. Two servers writing the same database can race at insert time; the slug unique constraint then keeps the first guide.
+- Seeded GitHub, Google Calendar, and Slack guides are left unchanged by later research, and their claims do not carry a per-sentence source URL.
 - Composio’s managed-OAuth catalog lists those three, and an own OAuth app is optional for them. The live toolkit API was not called, default scopes were not published, and no OAuth flow was executed.
 - Google’s current web-client instructions say client secrets are not used for web applications, while Composio’s form asks for a client secret. That disagreement stays uncertain in the seeded Calendar guide.

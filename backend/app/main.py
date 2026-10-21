@@ -23,11 +23,14 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
         allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type"],
+        allow_headers=["Content-Type", "Last-Event-ID"],
     )
     engine = bind_database(app, settings)
     app.state.research = build_research(settings)
     init_db(engine)
+    from app.research.store import abandon_interrupted_runs
+
+    abandon_interrupted_runs(app.state.session_factory)
     if settings.seed_on_startup:
         seed_database(engine)
 

@@ -93,7 +93,15 @@ function GuideDocument({ slug }: { slug: string }) {
 
         <dl className="mt-8 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2">
           <Meta label="Authentication" claim={guide.auth_type} />
-          <Meta label="Setup path" claim={{ value: guide.setup_path.label, status: guide.setup_path.status, note: guide.setup_path.note }} />
+          <Meta
+            label="Setup path"
+            claim={{
+              value: guide.setup_path.label,
+              status: guide.setup_path.status,
+              note: guide.setup_path.note,
+              source_url: guide.setup_path.source_url,
+            }}
+          />
           <Meta label="Difficulty" claim={guide.difficulty} />
           <Meta label="Active effort" claim={guide.active_effort} />
           <Meta label="Approval wait" claim={guide.approval_wait} />
@@ -198,6 +206,7 @@ function Meta({ label, claim }: { label: string; claim: Claim }) {
           <ClaimMark status={claim.status} />
         </span>
         {claim.note ? <span className="mt-2 block text-muted">{claim.note}</span> : null}
+        <SourceLink url={claim.source_url} />
       </dd>
     </div>
   );
@@ -212,6 +221,7 @@ function ClaimBlock({ title, claim }: { title: string; claim: Claim }) {
       </div>
       <p className="mt-2 text-sm leading-6">{claimText(claim.value)}</p>
       {claim.note ? <p className="mt-2 text-sm leading-6 text-muted">{claim.note}</p> : null}
+      <SourceLink url={claim.source_url} />
     </div>
   );
 }
@@ -241,6 +251,21 @@ function ItemBody({ item }: { item: GuideItem }) {
       </div>
       <p className="mt-2 max-w-[68ch] text-[15px] leading-7">{item.body}</p>
       {item.note ? <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">{item.note}</p> : null}
+      <SourceLink url={item.source_url} />
     </div>
+  );
+}
+
+function SourceLink({ url }: { url?: string | null }) {
+  if (!url) {
+    return null;
+  }
+  return (
+    <a
+      href={url}
+      className="mt-2 block max-w-[68ch] break-all text-sm underline decoration-line-strong underline-offset-2"
+    >
+      {url}
+    </a>
   );
 }

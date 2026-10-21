@@ -29,6 +29,28 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def abandon_interrupted_runs(session_factory) -> None:
+    """A restart kills the background thread. Release the name so the app can be researched again."""
+
+    with session_factory() as session:
+        runs = session.scalars(
+            select(ResearchRun).where(ResearchRun.status.in_(("queued", "running")))
+        ).all()
+        for run in list(runs):
+            finish(
+                session,
+                run,
+                "failed",
+                "The research process restarted before this run finished, so no guide was saved.",
+                code="interrupted",
+            )
+        for lock in session.scalars(select(ActiveResearch)).all():
+            current = session.get(ResearchRun, lock.run_id)
+            if current is None or current.status in TERMINAL:
+                session.delete(lock)
+        session.commit()
+
+
 def start_run(session: Session, identity: Identity) -> ResearchRun:
     lock = session.get(ActiveResearch, identity.normalized_name)
     if lock is not None:
@@ -158,6 +180,43 @@ def _publisher(url: str) -> str:
     return (urlsplit(url).hostname or "source")[:80]
 
 
+def _first_url(evidence_ids: list[str], pages: list) -> str | None:
+    by_key = {page.key: page.url for page in pages}
+    for evidence_id in evidence_ids:
+        url = by_key.get(evidence_id)
+        if url:
+            return url[:500]
+    return None
+
+
+def _cited_sources(checked: CheckedGuide, pages: list) -> dict[str, str]:
+    cited: dict[str, str] = {}
+    claims = {
+        "auth_type": checked.auth_type,
+        "setup_path": checked,
+        "difficulty": checked.difficulty,
+        "active_effort": checked.active_effort,
+        "approval_wait": checked.approval_wait,
+        "confidence": checked.confidence,
+        "managed": checked.managed,
+        "bring_your_own": checked.bring_your_own,
+        "redirect_uri": checked.redirect_uri,
+    }
+    for key, claim in claims.items():
+        if key == "setup_path":
+            status = checked.setup_path_status
+            evidence_ids = checked.setup_path_evidence_ids
+        else:
+            status = claim.status
+            evidence_ids = claim.evidence_ids
+        if status == "unknown":
+            continue
+        url = _first_url(evidence_ids, pages)
+        if url:
+            cited[key] = url
+    return cited
+
+
 def persist_guide(
     session: Session,
     identity: Identity,
@@ -207,6 +266,7 @@ def persist_guide(
         execution_note=EXECUTION_NOTE,
         tested=False,
         last_checked=today,
+        claim_sources_json=json.dumps(_cited_sources(checked, pages)),
     )
     try:
         with session.begin_nested():
@@ -234,6 +294,7 @@ def persist_guide(
                     body=item.body,
                     status=item.status,
                     note=item.note,
+                    source_url=_first_url(item.evidence_ids, pages) if item.status != "unknown" else None,
                 )
             )
 

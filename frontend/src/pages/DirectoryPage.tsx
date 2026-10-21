@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { ApiError, fetchGuides } from "../api";
 import { ClaimMark } from "../components/ClaimMark";
 import { EmptyBlock, ErrorBlock, LoadingBlock } from "../components/StatusBlock";
-import { SETUP_FILTERS, claimText, formatCheckedDate } from "../content";
+import { SETUP_FILTERS, claimText, formatCheckedDate, previewClaim } from "../content";
 import type { GuideSummary } from "../types";
 
 type LoadState =
@@ -207,6 +207,14 @@ export function DirectoryPage() {
                       <span>{claimText(guide.difficulty.value)}</span>
                       <ClaimMark status={guide.difficulty.status} />
                     </div>
+                    <p className="mt-2 max-w-3xl text-sm leading-6">
+                      <span className="text-muted">Active effort · </span>
+                      {previewClaim(guide.active_effort.value)}
+                    </p>
+                    <p className="max-w-3xl text-sm leading-6">
+                      <span className="text-muted">Approval wait · </span>
+                      {previewClaim(guide.approval_wait.value)}
+                    </p>
                   </Link>
                 </li>
               ))}

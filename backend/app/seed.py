@@ -31,6 +31,30 @@ CLAIM_PREFIXES = (
 
 def init_db(engine) -> None:
     Base.metadata.create_all(engine)
+    _ensure_columns(engine)
+
+
+def _ensure_columns(engine) -> None:
+    """Add columns that create_all does not apply to a database that already exists."""
+
+    if engine.dialect.name != "sqlite":
+        return
+    additions = {
+        "guides": (
+            "claim_sources_json",
+            "ALTER TABLE guides ADD COLUMN claim_sources_json TEXT NOT NULL DEFAULT '{}'",
+        ),
+        "guide_items": (
+            "source_url",
+            "ALTER TABLE guide_items ADD COLUMN source_url VARCHAR(500)",
+        ),
+    }
+    with engine.begin() as connection:
+        for table, (column, statement) in additions.items():
+            rows = connection.exec_driver_sql(f"PRAGMA table_info({table})").fetchall()
+            names = {row[1] for row in rows}
+            if names and column not in names:
+                connection.exec_driver_sql(statement)
 
 
 def seed_database(engine) -> None:
@@ -64,6 +88,7 @@ def _upsert_guide(session: Session, payload: dict) -> None:
     guide.execution_note = payload["execution_note"]
     guide.tested = bool(payload["tested"])
     guide.last_checked = payload["last_checked"]
+    guide.claim_sources_json = "{}"
 
     setup = payload["setup_path"]
     if setup["value"] not in SETUP_PATHS:

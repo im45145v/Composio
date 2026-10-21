@@ -5,7 +5,11 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    // Bind IPv4 explicitly. On this machine "localhost" is ::1, so a page opened at
+    // 127.0.0.1 would otherwise load from cache and then fail every /api request.
+    host: "127.0.0.1",
     port: 5173,
+    strictPort: true,
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8000",

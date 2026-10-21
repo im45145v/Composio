@@ -51,6 +51,7 @@ class Guide(Base):
     execution_note: Mapped[str] = mapped_column(Text)
     tested: Mapped[bool] = mapped_column(Boolean, default=False)
     last_checked: Mapped[date] = mapped_column(Date)
+    claim_sources_json: Mapped[str] = mapped_column(Text, default="{}", server_default="{}")
 
     items: Mapped[list[GuideItem]] = relationship(
         back_populates="guide",
@@ -76,6 +77,7 @@ class GuideItem(Base):
     body: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20))
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     guide: Mapped[Guide] = relationship(back_populates="items")
 

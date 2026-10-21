@@ -16,6 +16,7 @@ class ClaimModel(BaseModel):
     value: str | None = None
     status: ClaimStatus
     note: str | None = None
+    source_url: str | None = None
 
 
 class SetupPathModel(BaseModel):
@@ -23,6 +24,7 @@ class SetupPathModel(BaseModel):
     label: str
     status: ClaimStatus
     note: str | None = None
+    source_url: str | None = None
 
 
 class GuideItemModel(BaseModel):
@@ -31,6 +33,7 @@ class GuideItemModel(BaseModel):
     body: str
     status: ClaimStatus
     note: str | None = None
+    source_url: str | None = None
 
 
 class SourceModel(BaseModel):

@@ -218,6 +218,11 @@ def test_successful_run_persists_a_shareable_guide(research_app):
         assert payload["approval_wait"]["status"] == "unknown"
         assert payload["active_effort"]["status"] == "unknown"
         assert payload["composio"]["redirect_uri"]["value"].startswith("https://backend.composio.dev/")
+        assert payload["auth_type"]["source_url"] == EXAMPLE_DOCS
+        assert payload["steps"][0]["source_url"] == EXAMPLE_DOCS
+        assert payload["human_actions"][0]["source_url"] == EXAMPLE_DOCS
+        assert payload["composio"]["redirect_uri"]["source_url"] == COMPOSIO_DOCS
+        assert payload["approval_wait"]["source_url"] is None
         statuses: list[str] = []
         _statuses(payload, statuses)
         assert "verified" not in statuses
@@ -435,6 +440,91 @@ def test_duplicate_submission_joins_the_running_job(tmp_path, monkeypatch):
         events = read_events(client, first.json()["run_id"])
         assert events[-1]["data"]["code"] == "search_failed"
         assert client.get("/api/guides/example").status_code == 404
+
+
+def test_missing_human_action_does_not_save_a_guide(research_app):
+    draft = valid_draft()
+    draft["human_actions"] = []
+    research_app.state.fakes["model"].payload = draft
+    with TestClient(research_app) as client:
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
+        assert run["status"] == "insufficient_evidence"
+        assert "person" in run["message"]
+        assert client.get("/api/guides/example").status_code == 404
+
+
+def test_page_budget_keeps_provider_and_composio_pages():
+    from app.research.pipeline import _select_urls
+
+    hits = [SearchHit(f"Composio {index}", f"https://docs.composio.dev/page-{index}") for index in range(6)]
+    hits.append(SearchHit("Vendor OAuth", "https://developer.vendor.example/docs/oauth"))
+    urls = _select_urls(
+        hits,
+        "https://docs.vendor.example/register",
+        4,
+        screen=lambda url: url,
+    )
+    assert urls[0] == "https://docs.vendor.example/register"
+    assert "https://developer.vendor.example/docs/oauth" in urls
+    assert any(url.startswith("https://docs.composio.dev/") for url in urls)
+    assert len(urls) == 4
+
+
+def test_restart_releases_a_dead_research_lock(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'guides.db'}")
+    monkeypatch.setenv("SEED_ON_STARTUP", "true")
+    monkeypatch.setenv("RESEARCH_INLINE", "true")
+    from app.main import create_app
+    from app.models import ActiveResearch, ResearchRun
+    from app.research.store import utcnow
+
+    first = create_app()
+    with first.state.session_factory() as session:
+        session.add(
+            ResearchRun(
+                id="dead-run",
+                app_name="Example",
+                normalized_name="example",
+                docs_url=None,
+                status="running",
+                stage="searching",
+                error_code=None,
+                message=None,
+                guide_slug=None,
+                guide_created=False,
+                created_at=utcnow(),
+                updated_at=utcnow(),
+            )
+        )
+        session.add(ActiveResearch(normalized_name="example", run_id="dead-run"))
+        session.commit()
+
+    restarted = create_app()
+    restarted.state.research = replace(
+        restarted.state.research,
+        configured=True,
+        inline=True,
+        search=FakeSearch(),
+        model=FakeModel(valid_draft()),
+        reader=FakeReader(
+            {
+                EXAMPLE_DOCS: ("Example OAuth", EXAMPLE_TEXT),
+                COMPOSIO_DOCS: ("Example toolkit", COMPOSIO_TEXT),
+            }
+        ),
+        unavailable_reason=None,
+    )
+    with TestClient(restarted) as client:
+        old = client.get("/api/research-runs/dead-run").json()
+        assert old["status"] == "failed"
+        assert old["error_code"] == "interrupted"
+        assert "restarted" in old["message"]
+        response = client.post("/api/research-requests", json={"app_name": "Example", "docs_url": EXAMPLE_DOCS})
+        assert response.status_code == 202
+        assert response.json()["run_id"] != "dead-run"
+        assert response.json()["guide_created"] is True
+        assert client.get("/api/guides/example").status_code == 200
 
 
 def test_timeout_fails_the_run(research_app):

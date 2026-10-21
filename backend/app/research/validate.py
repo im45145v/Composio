@@ -288,6 +288,11 @@ def validate_draft(raw: str, pages: list[EvidencePage]) -> CheckedGuide:
         raise InsufficientEvidence(
             "The retrieved pages do not support registration steps, so no guide was saved."
         )
+    human_actions = [item for item in human_actions if item.status != "unknown"]
+    if not human_actions:
+        raise InsufficientEvidence(
+            "The retrieved pages do not support a step a person has to perform, so no guide was saved."
+        )
     if setup.status == "unknown":
         draft_setup_value = "own_app_unless_confirmed"
         draft_setup_label = "Own app unless managed auth is confirmed"

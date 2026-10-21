@@ -241,28 +241,52 @@ def _search(deps: ResearchDeps, name: str):
     return hits
 
 
-def _select_urls(hits, docs_url: str | None, limit: int) -> list[str]:
-    ranked: list[tuple[int, str]] = []
+def _select_urls(hits, docs_url: str | None, limit: int, *, screen=screen_url) -> list[str]:
+    """Keep the caller's page, one provider page, and one Composio page inside the fetch budget."""
+
+    if limit <= 0:
+        return []
+    chosen: list[str] = []
     seen: set[str] = set()
+
+    def add(url: str | None) -> None:
+        if url and url not in seen and len(chosen) < limit:
+            seen.add(url)
+            chosen.append(url)
+
     if docs_url:
         try:
-            ranked.append((10_000, screen_url(docs_url)))
-            seen.add(ranked[0][1])
+            add(screen(docs_url))
         except UnsafeURL:
             pass
     scored: list[tuple[int, str]] = []
     for hit in hits:
         try:
-            url = screen_url(hit.url)
+            url = screen(hit.url)
         except UnsafeURL:
             continue
-        if url in seen:
+        if url in seen or any(existing == url for _score_value, existing in scored):
             continue
-        seen.add(url)
         scored.append((_score(url), url))
     scored.sort(key=lambda item: item[0], reverse=True)
-    ranked.extend(scored)
-    return [url for _score_value, url in ranked[:limit]]
+
+    def take(predicate) -> None:
+        for index, (_score_value, url) in enumerate(scored):
+            if predicate(url):
+                add(url)
+                scored.pop(index)
+                return
+
+    take(lambda url: not _is_composio(url))
+    take(_is_composio)
+    for _score_value, url in scored:
+        add(url)
+    return chosen
+
+
+def _is_composio(url: str) -> bool:
+    host = (urlsplit(url).hostname or "").lower()
+    return host == "composio.dev" or host.endswith(".composio.dev")
 
 
 def _score(url: str) -> int:
