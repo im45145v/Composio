@@ -1,0 +1,212 @@
+{
+  "slug": "zoom",
+  "name": "Zoom",
+  "summary": "The setup integrates Zoom with third-party apps via OAuth 2.0, allowing programmatic access to Zoom APIs as a user or account. The recommended path is to create a new OAuth app on the Zoom App Marketplace, retrieve the app's credentials, set Composio's callback as the redirect URI, and configure required scopes. This enables Zoom account linking and secure API access via Composio or similar platforms.",
+  "decision": "You should create your own OAuth app in the Zoom App Marketplace, select 'General' or 'server-to-server' app type as per your use case, then obtain the Client ID and Client Secret, configure the redirect URI to Composio's callback, and set the required scopes before finishing Zoom side setup and connecting Zoom from within Composio.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2.0",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developers.zoom.us/docs/integrations/oauth/"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Setup path",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://composio.dev/auth/zoom"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Multiple steps are required, including Zoom account use, app creation, manual configuration, and access management. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Effort consists of Zoom login, app creation, copying credentials, editing settings, and Composio dashboard steps. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "No publishing or external approval is needed for development or private use unless production/publishing is required.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You should create your own OAuth app in the Zoom App Marketplace, select 'General' or 'server-to-server' app type as per your use case, then obtain the Client ID and Client Secret, configure the redirect URI to Composio's callback, and set the required scopes before finishing Zoom side setup and connecting Zoom from within Composio.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": null,
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": "You must bring your own Zoom OAuth app credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom"
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v3/toolkits/auth/callback",
+      "status": "documented",
+      "note": "This must be set as an Authorized Redirect URI in your Zoom app's OAuth information.",
+      "source_url": "https://composio.dev/auth/zoom"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Zoom account with developer permissions",
+      "body": "You need a Zoom account. You must be the account owner, admin, or have the Zoom for developers role assigned.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.zoom.us/docs/integrations/create",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Composio account and access",
+      "body": "You need to be able to log into Composio and manage Auth Config for your project.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Log in to the Zoom App Marketplace",
+      "body": "Go to the Zoom App Marketplace and sign in with the Zoom account having developer privileges.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.zoom.us/docs/integrations/create",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create a new OAuth app",
+      "body": "Click 'Developer', then 'Build an app'. Select either 'General' or 'server-to-server' app based on your need and create the app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Access and copy the app credentials",
+      "body": "After creating the app, navigate to Basic Info to access and copy the Client ID and Client Secret.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Configure the required scopes",
+      "body": "Under the Scopes tab, select the API permissions your app requires. Use default or Composio-supported scopes as applicable.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Save and continue Zoom app configuration",
+      "body": "Save your settings and ensure the app credentials and redirect URI are correct.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Navigate to Composio dashboard and create auth config",
+      "body": "In your Composio project, click 'Create Auth Config', select Zoom toolkit, set authentication to OAuth2, and provide the copied Client ID, Client Secret, and callback URL.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Connect your Zoom account",
+      "body": "Follow the Zoom connection flow inside Composio, authorize access when prompted by Zoom, and ensure the account links successfully.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Finalize and use your auth configuration",
+      "body": "Manage or update your Zoom Auth Config as required, and copy the auth config ID for use in your codebase.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Create OAuth app in the Zoom App Marketplace",
+      "body": "A person must manually log in, create a Zoom OAuth app, and manage its settings.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Copy credentials and input them in Composio",
+      "body": "Paste the Client ID, Client Secret, and redirect URI from your Zoom app into Composio dashboard's auth config fields.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Authorize the app from the Zoom prompt",
+      "body": "Click 'Allow' when Zoom prompts for OAuth consent during the linking process.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/zoom",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth 2.0",
+      "url": "https://developers.zoom.us/docs/integrations/oauth/",
+      "publisher": "developers.zoom.us",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting up Zoom",
+      "url": "https://composio.dev/auth/zoom",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Create an OAuth app",
+      "url": "https://developers.zoom.us/docs/integrations/create",
+      "publisher": "developers.zoom.us",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

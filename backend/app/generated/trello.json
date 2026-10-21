@@ -1,0 +1,248 @@
+{
+  "slug": "trello",
+  "name": "Trello",
+  "summary": "This guide describes how to connect an external integration to Trello by creating a new Power-Up, generating API credentials, and authorizing user access with token-based authentication. Trello requires every integration to have its own app (Power-Up), and access to user data is granted through user-specific tokens obtained after user consent.",
+  "decision": "To set up OAuth access to Trello, you must create your own Power-Up using the admin portal, generate an API Key (Client ID) and Secret, and then direct users to the Trello authorization URL to grant access and receive their user-specific access token. Trello does not offer a managed shared app for general API integrations, so you must use your own app credentials.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "Token-based authentication using API Key and user-specific token (similar to OAuth flow)",
+    "status": "documented",
+    "note": "API Key uniquely identifies your Power-Up, and each user must grant access to receive an access token.",
+    "source_url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Create and use your own Trello Power-Up for all integrations.",
+    "status": "documented",
+    "note": "The onboarding process requires you to create your own app; there is no public Trello app for general OAuth API use.",
+    "source_url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "The steps are straightforward, but manual interaction with the Power-Ups portal is required. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Time to create the Power-Up, generate credentials, and complete user authorization. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "No reviewer or approval queue is described for creating your own app or Power-Up; you have immediate access once you have a Trello account.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "To set up OAuth access to Trello, you must create your own Power-Up using the admin portal, generate an API Key (Client ID) and Secret, and then direct users to the Trello authorization URL to grant access and receive their user-specific access token. Trello does not offer a managed shared app for general API integrations, so you must use your own app credentials.",
+    "managed": {
+      "value": "Trello does not provide a centrally managed public OAuth app for external integrations; each integration must use its own Power-Up.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello"
+    },
+    "bring_your_own": {
+      "value": "You must bring your own app (Power-Up), obtain its API Key and Secret, and manage user authorization.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/"
+    },
+    "redirect_uri": {
+      "value": "The redirect URI (return_url) must match one of your Power-Up's allowed origins set in your app's configuration in the Power-Ups portal.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Trello Account",
+      "body": "A registered Trello account is required to access the Power-Ups admin portal and create a Power-Up.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Access Power-Ups Admin Portal",
+      "body": "You must use the Power-Ups admin portal at https://trello.com/power-ups/admin instead of the deprecated /app-key page.",
+      "status": "documented",
+      "note": "The /app-key page is replaced by the Power-Ups admin portal.",
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Log in to Trello",
+      "body": "Sign in with your Trello account at https://id.atlassian.com/login.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Open Power-Ups Admin Portal",
+      "body": "Navigate to https://trello.com/power-ups/admin to manage or create Power-Ups.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Create a New Power-Up",
+      "body": "Click 'New', then provide the required information such as Power-Up name, Workspace, Email, Support contact, Author, and Iframe connector URL.",
+      "status": "documented",
+      "note": "Minimal placeholder values are acceptable if you are not building a UI.",
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Generate API Key and Secret",
+      "body": "After creating your Power-Up, open it, go to the API Key tab, and select 'Generate a new API Key'. Copy the displayed API Key and Secret.",
+      "status": "documented",
+      "note": "Both the API Key and Secret are shown in the Power-Up settings.",
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Configure Allowed Origins",
+      "body": "Set the Allowed Origins to include any URLs where Trello should be permitted to redirect users after authorization (your app's OAuth callback URIs).",
+      "status": "documented",
+      "note": "Redirect will be blocked if the return_url does not match.",
+      "source_url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Receive and Store Access Token",
+      "body": "After the user clicks 'Allow', Trello will redirect according to your parameters and return a user-specific access token, which you should securely store.",
+      "status": "documented",
+      "note": "Do not share or commit tokens to source control.",
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Verify Credentials Functionality",
+      "body": "Make a test API request (e.g., GET https://api.trello.com/1/members/me?key=YOUR_API_KEY&token=YOUR_TOKEN) to confirm the API Key and token combination works.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Sign in to Trello",
+      "body": "Log in at https://id.atlassian.com/login with your Trello credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Access Power-Ups Portal",
+      "body": "Go to https://trello.com/power-ups/admin to begin the application setup.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Create Power-Up",
+      "body": "Fill in the new Power-Up creation form and submit it.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Generate and Copy Credentials",
+      "body": "Click to generate your API Key (Client ID) and Secret and copy them securely.",
+      "status": "documented",
+      "note": "Keep the Secret and any user tokens private.",
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Set Allowed Origins",
+      "body": "Manually configure allowed redirect URIs for your integration in the app settings.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Authorize App for User",
+      "body": "Visit the authorization URL in your browser, review requested scopes, and click 'Allow'.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Copy User Access Token",
+      "body": "After allowing, copy and store the returned token securely.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Test the Integration",
+      "body": "Call the Trello API (e.g., GET user info) using your new credentials to confirm everything works.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/trello",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Authorization",
+      "url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/",
+      "publisher": "developer.atlassian.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Step 1: Open the Power-Ups Admin Portal",
+      "url": "https://composio.dev/auth/trello",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "API Introduction",
+      "url": "https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/",
+      "publisher": "developer.atlassian.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

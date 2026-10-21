@@ -288,7 +288,7 @@ def test_invalid_input_and_ssrf_urls_are_rejected(client, research_app):
             assert response.json()["detail"]["code"] in {"unsafe_url", "blocked_address", "unsupported_protocol"}
         name_url = configured.post("/api/research-requests", json={"app_name": "http://127.0.0.1/latest"})
         assert name_url.status_code == 422
-        assert configured.get("/api/guides").json()["count"] == 4
+        assert configured.get("/api/guides").json()["count"] == 32
     blank = client.post("/api/research-requests", json={"app_name": "   "})
     assert blank.status_code == 422
     private = client.post(
@@ -558,11 +558,11 @@ def test_an_off_topic_page_is_not_saved_as_the_app(research_app):
         "Log into your Box account and open the Developer Console.",
     )
     with TestClient(research_app) as client:
-        response = client.post("/api/research-requests", json={"app_name": "Todoist", "docs_url": box})
+        response = client.post("/api/research-requests", json={"app_name": "Acme", "docs_url": box})
         run = client.get(f"/api/research-runs/{response.json()['run_id']}").json()
         assert run["status"] == "insufficient_evidence"
-        assert "Todoist" in run["message"]
-        assert client.get("/api/guides/todoist").status_code == 404
+        assert "Acme" in run["message"]
+        assert client.get("/api/guides/acme").status_code == 404
         assert research_app.state.fakes["model"].systems == []
 
 

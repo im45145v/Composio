@@ -95,6 +95,11 @@ CLAIM_PREFIXES = (
     "byo",
     "redirect",
 )
+# Column prefixes and the public claim names the API reads from claim_sources_json.
+CLAIM_SOURCE_KEYS = {
+    "byo": "bring_your_own",
+    "redirect": "redirect_uri",
+}
 
 
 def init_db(engine) -> None:
@@ -164,6 +169,9 @@ def _payload_from_detail(detail: dict) -> dict:
     if isinstance(checked, str):
         checked = date.fromisoformat(checked)
     composio = detail["composio"]
+    origin = detail.get("origin")
+    if origin not in {"editorial", "researched"}:
+        origin = "researched"
     return {
         "slug": detail["slug"],
         "name": detail["name"],
@@ -172,7 +180,7 @@ def _payload_from_detail(detail: dict) -> dict:
         "execution_note": detail["execution_note"],
         "tested": bool(detail["tested"]),
         "last_checked": checked,
-        "origin": "researched",
+        "origin": origin,
         "managed_by_seed": True,
         "auth_type": detail["auth_type"],
         "setup_path": detail["setup_path"],
@@ -233,7 +241,7 @@ def _upsert_guide(session: Session, payload: dict) -> None:
         setattr(guide, f"{prefix}_status", claim["status"])
         setattr(guide, f"{prefix}_note", claim.get("note"))
         if claim.get("source_url"):
-            claim_sources[prefix] = claim["source_url"]
+            claim_sources[CLAIM_SOURCE_KEYS.get(prefix, prefix)] = claim["source_url"]
     guide.claim_sources_json = json.dumps(claim_sources)
 
     guide.items.clear()

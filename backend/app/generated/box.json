@@ -1,0 +1,204 @@
+{
+  "slug": "box",
+  "name": "Box",
+  "summary": "This guide explains how to set up your own OAuth 2.0 application for Box, providing secure delegated access for your users. You will use Box's Developer Console to create and configure your user app, assign the required redirect URI, set appropriate scopes, and\u2014if your users are part of certain Box enterprises\u2014may need an enterprise admin to explicitly allow your unpublished app. A managed public marketplace app is not required for integration or for most production use cases.",
+  "decision": "Follow the path to create your own Box OAuth 2.0 app in the Box Developer Console, add your integration's redirect URI, configure scopes, and use your client credentials. You only need Box administrator involvement if your customer's enterprise has unpublished apps disabled by default. There is no approval or review required from Box unless you intend to publish the app to the marketplace.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2.0 Authorization Code",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developer.box.com/guides/authentication/oauth2"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Create your own Box OAuth app unless a managed app is available and confirmed.",
+    "status": "documented",
+    "note": "All passages describe creating your own application; there is no evidence of a managed or public option being required except for optional marketplace listing.",
+    "source_url": "https://developer.box.com/guides/authentication/oauth2"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "A free developer account is sufficient and there are no reviews for private apps; steps are mainly form-filling and copy-pasting configuration. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "The setup steps are straightforward and do not require code, but do require logging into Box and filling out forms. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "Most users do not need to wait for approval; only Box enterprise users with certain admin settings will need admin to enable the app in their own Box instance.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "Follow the path to create your own Box OAuth 2.0 app in the Box Developer Console, add your integration's redirect URI, configure scopes, and use your client credentials. You only need Box administrator involvement if your customer's enterprise has unpublished apps disabled by default. There is no approval or review required from Box unless you intend to publish the app to the marketplace.",
+    "managed": {
+      "value": "There is no default managed or marketplace app required unless you intend to publish broadly; for most use cases, you must bring your own app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup"
+    },
+    "bring_your_own": {
+      "value": "Bring your own Box OAuth app is the default and recommended path.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup"
+    },
+    "redirect_uri": {
+      "value": "https://unify.apideck.com/vault/callback",
+      "status": "documented",
+      "note": "This value is specifically given in the Apideck guide as the sample redirect URI to register.",
+      "source_url": "https://developers.apideck.com/apis/file-storage/box/configuration"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Box Account with Developer Console access",
+      "body": "A Box account is required. A free developer account is sufficient to create and manage OAuth apps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Log into Box Developer Console",
+      "body": "Go to https://app.box.com/developers/console and sign in with your Box account.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create a new custom OAuth app",
+      "body": "Choose 'New App', select 'Custom App', provide a name, description, and purpose (e.g., 'Integration' and 'Workflow'), then select 'OAuth 2.0' as authentication and click Create.",
+      "status": "documented",
+      "note": "'User' app type is synonymous with 'Custom App' for OAuth 2.0 as per Box documentation.",
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Set application scopes",
+      "body": "Select the minimum scopes your integration requires, e.g., 'Read all files and folders stored in Box' or 'Read and write all files and folders stored in Box'. Click Save.",
+      "status": "documented",
+      "note": "Read and write encompasses read; pick only what's necessary.",
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Configure CORS domains (if needed)",
+      "body": "If your integration makes direct browser API calls, add your application's origin to the 'CORS Domain' allow-list. If it's server-to-server, you can skip this.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Copy client ID and client secret",
+      "body": "After creation, locate and securely store your app's OAuth 2.0 credentials: Client ID and Client Secret.",
+      "status": "documented",
+      "note": "Store these securely for use in your integration.",
+      "source_url": "https://developers.apideck.com/apis/file-storage/box/configuration",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Test your OAuth integration",
+      "body": "Initiate an OAuth authorization flow to ensure configuration is correct. Log in, approve requested permissions, and verify the connection.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.apideck.com/apis/file-storage/box/configuration",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "Enterprise admin approval (conditional)",
+      "body": "If your customer's Box enterprise has 'Disable unpublished apps by default' enabled, a Box admin must approve your app by its client ID before users can connect.",
+      "status": "documented",
+      "note": "This is rare; applies only if enterprise toggles that setting.",
+      "source_url": "https://developers.apideck.com/apis/file-storage/box/configuration",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Log into Box Developer Console",
+      "body": "A person must manually sign in and perform app creation and configuration steps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Input redirect URI and scopes",
+      "body": "A human must specify the correct redirect URI and select the required scopes; this cannot be auto-configured.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Copy application credentials securely",
+      "body": "Client ID and secret need to be retrieved and set in the connector or integration's configuration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.apideck.com/apis/file-storage/box/configuration",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Consent to permissions during OAuth flow",
+      "body": "The end user must authenticate and approve requested access when first connecting.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.box.com/guides/authentication/oauth2",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth 2.0 authentication",
+      "url": "https://developer.box.com/guides/authentication/oauth2",
+      "publisher": "developer.box.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setup with OAuth 2.0",
+      "url": "https://developer.box.com/guides/authentication/oauth2/oauth2-setup",
+      "publisher": "developer.box.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Box \u2014 File Storage API: configuration",
+      "url": "https://developers.apideck.com/apis/file-storage/box/configuration",
+      "publisher": "developers.apideck.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

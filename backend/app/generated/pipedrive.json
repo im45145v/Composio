@@ -1,0 +1,246 @@
+{
+  "slug": "pipedrive",
+  "name": "Pipedrive",
+  "summary": "This guide explains how to connect your service to Pipedrive by creating and configuring your own OAuth 2.0 app in the Pipedrive Developer Hub, including collecting credentials, setting the required redirect URI, and handling app approval for production or marketplace use.",
+  "decision": "You must create your own OAuth app in Pipedrive Developer Hub, specify the exact callback URL, select correct access scopes, copy your credentials, and use them to enable OAuth 2.0 integration in your platform or server\u2014there is no managed OAuth available for Pipedrive.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developers.pipedrive.com/docs/api/v1/Oauth"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Setup path",
+    "status": "documented",
+    "note": "Managed OAuth is not available for Pipedrive; you are required to bring and register your own OAuth credentials.",
+    "source_url": "https://docs.composio.dev/toolkits/pipedrive"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Requires access to Developer Hub, several UI configuration steps, attention to URI matching, and secure credential handling. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Based on multi-step configuration and account handling described in the tutorials. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": "Immediate use for private/live apps, but public/Marketplace apps require Pipedrive review which can take several days.",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developers.apideck.com/apis/crm/pipedrive/configuration"
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You must create your own OAuth app in Pipedrive Developer Hub, specify the exact callback URL, select correct access scopes, copy your credentials, and use them to enable OAuth 2.0 integration in your platform or server\u2014there is no managed OAuth available for Pipedrive.",
+    "managed": {
+      "value": "Composio-managed OAuth is not available for Pipedrive connections.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/pipedrive"
+    },
+    "bring_your_own": {
+      "value": "You must bring your own Pipedrive OAuth credentials and maintain your own app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/pipedrive"
+    },
+    "redirect_uri": {
+      "value": null,
+      "status": "unknown",
+      "note": "Exact match is required; mismatches will cause failure. The cited pages do not contain that URL.",
+      "source_url": null
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Pipedrive Developer Sandbox account",
+      "body": "You must have a Developer Sandbox account to access Developer Hub and manage OAuth apps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Access to your integration platform",
+      "body": "You need access to the platform (e.g., Apideck, Composio, your own app server) where the OAuth credentials will be used.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.apideck.com/apis/crm/pipedrive/configuration",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Access Pipedrive Developer Hub",
+      "body": "Login to your Pipedrive Developer Sandbox account, click your profile icon, then select Developer Hub.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create a new OAuth app",
+      "body": "In the Developer Hub, select to create a new app. Choose app type (private or public) as needed, enter the app name, and set the callback URL exactly as needed for your platform (e.g., Apideck or Glitch live URL and path).",
+      "status": "documented",
+      "note": "The callback URL must match exactly or the OAuth flow will fail.",
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Set OAuth scopes",
+      "body": "Select API scopes matching your integration needs (e.g., 'Deals - Full Access', etc.) in the OAuth & Access scopes section.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Save and copy credentials",
+      "body": "After saving, retrieve the generated Client ID and Client Secret. Copy these and store them securely in your config or environment, never sharing your Secret.",
+      "status": "documented",
+      "note": "Do not expose secrets in source code.",
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Change app status to Live / Send for review",
+      "body": "Private apps: Click Change to Live to use the app in your account. Public apps: Complete the marketplace listing form and send for Pipedrive review. The app is only usable by others once set to Live.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.apideck.com/apis/crm/pipedrive/configuration",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Configure your integration",
+      "body": "In your integration platform (Apideck, Composio custom OAuth config, or your server environment), provide the Client ID, Client Secret, and ensure the callback/redirect URI matches your Pipedrive app registration.",
+      "status": "documented",
+      "note": "Initiate connection from your platform, not via Pipedrive's Install/Test button.",
+      "source_url": "https://docs.composio.dev/toolkits/pipedrive",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Test the OAuth connection",
+      "body": "Initiate the OAuth flow from your integration, authorize the app, and verify the connection is successful.",
+      "status": "documented",
+      "note": "Do not test from inside Pipedrive\u2019s OAuth app settings.",
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "No Developer Sandbox account",
+      "body": "OAuth app registration is not possible in production Pipedrive accounts; only sandbox accounts may use Developer Hub.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Restricted app usage in Draft",
+      "body": "Apps in Draft status can only be used within their creator\u2019s organization until made Live or approved after review.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.apideck.com/apis/crm/pipedrive/configuration",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Redirect URI mismatch causes OAuth failure",
+      "body": "If the redirect URI in your integration does not exactly match the registered callback URL, authorization will fail.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.apideck.com/apis/crm/pipedrive/configuration",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register a Pipedrive OAuth App",
+      "body": "Log in to the Developer Hub and create a new OAuth app, specifying name, callback URL, and selecting the correct scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Copy credentials to your platform",
+      "body": "Copy the Client ID and Client Secret and configure them on your platform (e.g., as environment variables or in a credentials editor).",
+      "status": "documented",
+      "note": "Keep client secrets secure.",
+      "source_url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Change app to Live or submit for review as required",
+      "body": "Depending on your needs, either change your app to Live or submit for review so that users outside your own account can authorize it.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.apideck.com/apis/crm/pipedrive/configuration",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Configure your integration and test OAuth flow",
+      "body": "Initiate the OAuth authorization from your integration platform (not from inside Pipedrive) and test a full connection.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/pipedrive",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "API Reference",
+      "url": "https://developers.pipedrive.com/docs/api/v1/Oauth",
+      "publisher": "developers.pipedrive.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Topics",
+      "url": "https://developers.pipedrive.com/tutorials/build-your-first-pipedrive-hello-world-app",
+      "publisher": "developers.pipedrive.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Pipedrive",
+      "url": "https://docs.composio.dev/toolkits/pipedrive",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Pipedrive \u2014 CRM API: configuration",
+      "url": "https://developers.apideck.com/apis/crm/pipedrive/configuration",
+      "publisher": "developers.apideck.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

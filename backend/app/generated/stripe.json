@@ -1,0 +1,245 @@
+{
+  "slug": "stripe",
+  "name": "Stripe",
+  "summary": "Stripe provides a customizable OAuth 2.0 authentication flow for enabling third-party apps (such as platforms, marketplaces, or Stripe Apps) to access a user's Stripe account with the user's explicit consent. This flow is commonly used for onboarding users, enabling integrations, and granting granular permissions on behalf of end users. Both standard Stripe OAuth flows and Stripe App OAuth are documented. Composio offers a managed OAuth flow, but it also allows using your own Stripe OAuth credentials.",
+  "decision": "You must create and configure your own Stripe OAuth app and credentials unless you confirm use of Composio-managed OAuth. The official Stripe documentation describes a provider-managed (own app) setup path.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://docs.composio.dev/toolkits/stripe"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "You must register an app, configure its manifest, supply permissions, set redirect URIs, handle code exchange and token storage. Stripe provides guides for these steps. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Includes Stripe Dashboard configuration, code updates for OAuth redirect/callback, and token handling. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": "App review required before using public OAuth links and listing in the Stripe App Marketplace.",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth"
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You must create and configure your own Stripe OAuth app and credentials unless you confirm use of Composio-managed OAuth. The official Stripe documentation describes a provider-managed (own app) setup path.",
+    "managed": {
+      "value": "Composio-managed OAuth available",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/stripe"
+    },
+    "bring_your_own": {
+      "value": "Supported and documentation provided for bringing your own Stripe OAuth credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/stripe"
+    },
+    "redirect_uri": {
+      "value": "The redirect URI must match one set in your Stripe app settings. The first listed is the default, but you can specify any listed redirect_uri at authorization time.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/connect/oauth-reference"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Stripe Account",
+      "body": "You must have a Stripe account (platform or developer) to register OAuth applications.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create a Stripe App or Platform OAuth Credentials",
+      "body": "Create and configure a Stripe App using the Stripe CLI or set up platform OAuth credentials in the Stripe Dashboard.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Determine Redirect URIs",
+      "body": "Decide which URLs users should be redirected to after authorization and add them in allowed_redirect_uris or app settings.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/connect/oauth-reference",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Create Your Stripe OAuth App",
+      "body": "Register your app via the Stripe CLI (`stripe apps create `) or Stripe Dashboard, obtain your client_id (unique identifier), and enable OAuth onboarding.",
+      "status": "documented",
+      "note": "Stripe CLI is recommended for Stripe Apps; Dashboard for Connect/Platform flows.",
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure App Manifest or Platform Settings",
+      "body": "Set `stripe_api_access_type` to `oauth`, `distribution_type` to `public`, and add all required `allowed_redirect_uris`. Assign the necessary permissions your integration needs.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Set Redirect URIs",
+      "body": "Add all redirect URIs you will use during authorization, either in the app manifest or in platform onboarding settings, as Stripe will only redirect to a URI on this list.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/connect/oauth-reference",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Implement OAuth Authorization Link/Button",
+      "body": "On your site, present a 'Connect with Stripe' button or OAuth install link, which includes your client_id, response_type=code, optional scope, state, and an allowed redirect_uri.",
+      "status": "documented",
+      "note": "For Stripe Apps: `https://marketplace.stripe.com/oauth/v2/authorize?...`; For Platform: `https://connect.stripe.com/oauth/authorize?...`",
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Handle Redirect from Stripe",
+      "body": "After consent, Stripe redirects the user to your redirect URI with a short-lived authorization code (or error).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Exchange Authorization Code for Access Token",
+      "body": "Your backend exchanges the code for an access token and (optionally) a refresh token by POSTing to the Stripe `/oauth/token` endpoint, authenticated with your app's secret key.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Store Account Identifiers",
+      "body": "Save the returned `stripe_user_id` (account ID), access token, and refresh token securely for later use.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Use Access Token to Make Authorized Requests",
+      "body": "On behalf of the connected account, supply the `access_token` and/or `Stripe-Account` header with requests as appropriate.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 9,
+      "title": "Refresh Expired Access Tokens",
+      "body": "When your access token expires (after 1 hour), use the refresh token to request a new access token.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 10,
+      "title": "If Publishing a Stripe App, Submit for Review",
+      "body": "When ready to publish in the Stripe App Marketplace, submit your app with the public OAuth install link found in the Settings tab.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Configure Stripe OAuth App",
+      "body": "A human must log in to the Stripe Dashboard or CLI to register the app, set allowed redirect URIs, and copy credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Approve Permission Scopes",
+      "body": "A human must select which permission scopes (such as read_only or read_write) to request in the OAuth setup.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Publish or Submit App for Review (if public app)",
+      "body": "A human must submit the app for review before it is listed in the Stripe App Marketplace and before the public OAuth URLs are activated.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Connect OAuth reference",
+      "url": "https://docs.stripe.com/connect/oauth-reference",
+      "publisher": "docs.stripe.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "OAuth 2.0",
+      "url": "https://docs.stripe.com/stripe-apps/api-authentication/oauth",
+      "publisher": "docs.stripe.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Stripe",
+      "url": "https://docs.composio.dev/toolkits/stripe",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Using OAuth with Standard accounts",
+      "url": "https://docs.stripe.com/connect/oauth-standard-accounts",
+      "publisher": "docs.stripe.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

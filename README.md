@@ -10,14 +10,16 @@ The library runs with no API key. Research runs only when `MODEL_API_KEY` and `S
 
 ## What was built
 
-- Searchable directory of GitHub, Google Calendar, Slack, and Notion.
-- Standalone guide pages at `/guides/github`, `/guides/google-calendar`, `/guides/slack`, and `/guides/notion`.
+- Searchable directory of 32 guides. GitHub, Google Calendar, and Slack are the editorial guides. The other 29, including Notion and Discord, are stored as snapshots in `backend/app/generated/` and loaded on startup.
+- Standalone guide pages at `/guides/{slug}`, for example `/guides/github`, `/guides/google-calendar`, `/guides/slack`, and `/guides/notion`.
 - Each guide opens with difficulty, hands-on work, approval wait, and a split between what was already collected and what you still do.
 - Fields for authentication type, setup path, difficulty, active effort, approval wait, prerequisites, ordered steps, blockers, human actions, sources, confidence, and last-checked date.
 - Every factual field is marked **Documented** (a cited page says it; this project did not run it), **Inferred** (a reading of retrieved pages, not a direct statement), **Unknown** (the pages do not establish it), or **Uncertain** (an editorial label or an open question). **Verified** is reserved for a setup this project has actually executed. Neither the seed nor research uses it.
 - SQLite schema loaded on startup. Re-running the seed replaces guide text in place.
 
-The three guides were written from official GitHub, Google, Slack, and Composio pages checked on 21 October 2026 and reconciled to `docs/provider-research.md`. Difficulty labels and hands-on durations are editorial and marked uncertain, because the providers do not publish a rating or a measured time. Approval waits are quoted only where a page states one. GitHub’s registration wait was not found. Google’s sensitive-scope pages disagree (typically 3–5 business days versus an FAQ figure of 10 business days). Calendar scopes were not on the restricted-scope list, and the Calendar wait is otherwise unknown. Slack’s Marketplace bounds (up to 10 business days preliminary, up to 10 weeks for a new functional review) apply only to Marketplace review.
+GitHub, Google Calendar, and Slack were written from official provider and Composio pages checked on 21 October 2026 and reconciled to `docs/provider-research.md`. Difficulty labels and hands-on durations on those three are editorial and marked uncertain, because the providers do not publish a rating or a measured time. Approval waits are quoted only where a page states one. GitHub’s registration wait was not found. Google’s sensitive-scope pages disagree (typically 3–5 business days versus an FAQ figure of 10 business days). Calendar scopes were not on the restricted-scope list, and the Calendar wait is otherwise unknown. Slack’s Marketplace bounds (up to 10 business days preliminary, up to 10 weeks for a new functional review) apply only to Marketplace review.
+
+The other guides were saved from research runs on 21 October 2026 and checked into `backend/app/generated/` so a restart still serves them. Discord is in that folder with origin `editorial`. The rest are `researched`. A researched claim cites a page fetched for that run. Where those pages did not state a callback, a wait, or a difficulty, the field stays unknown.
 
 ## Layout
 
@@ -67,8 +69,8 @@ The test suite mocks search, page fetches, and the model. It does not call a pai
 2. Search `calendar`. Only Google Calendar remains. Clear the search. `not-a-provider` shows an empty library.
 3. Open GitHub, Google Calendar, and Slack from the list, then load http://127.0.0.1:5173/guides/slack directly. Each page lists sources and marks claims. None of them say Verified.
 4. Open Research an app and submit GitHub. The existing guide is returned and is not rewritten.
-5. Submit `Linear`, or `https://linear.app`. A documentation URL is optional. With both API keys unset, the page says research is not connected and no guide is stored. `http://127.0.0.1/secret` is rejected and does not start a run.
-6. Open Notion. That guide was generated on 22 October 2026 from `https://developers.notion.com`, then saved in `backend/app/generated/notion.json` so a restart still serves it. Its approval wait stays unknown because the pages that run read did not state one. With both API keys set, submit an app that is not in the library, such as Linear. A documentation URL is optional. Wait until the run says the guide was saved, then open the guide URL in a new tab.
+5. Submit `Basecamp`. A documentation URL is optional. With both API keys unset, the page says research is not connected and no guide is stored. `http://127.0.0.1/secret` is rejected and does not start a run. Submitting Linear returns the guide that is already in the library.
+6. Open Notion, Jira, and Gmail. Those guides were saved from research runs and are in `backend/app/generated/` so a restart still serves them. Notion’s approval wait stays unknown because the pages that run read did not state one. With both API keys set, submit an app that is not in the library, such as Basecamp. A documentation URL is optional. Wait until the run says the guide was saved, then open the guide URL in a new tab.
 
 ## Deploy
 
@@ -79,21 +81,34 @@ docker build -t field-guide .
 docker run --rm -p 8000:8000 -e PORT=8000 field-guide
 ```
 
-Set the variables from `.env.example` in the host's environment, not in a committed file. On Render the service listens on `0.0.0.0:$PORT`.
+Set variables in the host's environment, not in a committed file. On Render the service listens on `0.0.0.0:$PORT`. Render sets `PORT`. Leave `DATABASE_URL` unset so the app uses `sqlite:///./data/guides.db`. Leave `SEED_ON_STARTUP` unset so it stays `true` and startup reloads the library. Leave `CORS_ORIGINS` unset: the hosted page and the API share one origin.
 
-SQLite lives on the service disk. A free instance has an ephemeral filesystem, so a spin-down drops guides that were saved only by a live research run. Startup writes the editorial guides again and reloads `backend/app/generated/notion.json`. A research run that was still `queued` or `running` when the process stopped is marked failed, and that app name can be submitted again.
+The library itself needs no API key. Research on the hosted app needs both keys, using the same providers as a local `backend/.env`:
+
+| Variable | Value |
+| --- | --- |
+| `MODEL_PROVIDER` | `backboard` |
+| `BACKBOARD_LLM_PROVIDER` | `openai` |
+| `MODEL_NAME` | `gpt-4.1` |
+| `MODEL_API_KEY` | the Backboard key from `backend/.env` |
+| `SEARCH_PROVIDER` | `tavily` |
+| `SEARCH_API_KEY` | the Tavily key from `backend/.env` |
+
+`MODEL_PROVIDER` can instead be `openai`, `anthropic`, or `gemma`, with `SEARCH_PROVIDER` set to `tavily` or `brave`. Copy the keys into the Render Environment tab. Do not commit them. These keys are read when the process starts, so save them and deploy. A rebuild is unnecessary.
+
+SQLite lives on the service disk. A free instance has an ephemeral filesystem, so a spin-down drops a guide that was saved only by a live research run. Startup writes the three editorial guides again and reloads every snapshot in `backend/app/generated/`. A research run that was still `queued` or `running` when the process stopped is marked failed, and that app name can be submitted again.
 
 ## API
 
 | Method | Path | Behavior |
 | --- | --- | --- |
 | GET | `/api/health` | `research` is `configured` or `unavailable`. |
-| GET | `/api/guides?q=&path=` | Directory. `path` is `managed_or_own` or `own_app_unless_confirmed`. GitHub, Google Calendar, and Slack use `managed_or_own`. Notion uses `own_app_unless_confirmed`. |
+| GET | `/api/guides?q=&path=` | Directory of 32 guides. `path` is `managed_or_own` or `own_app_unless_confirmed`. |
 | GET | `/api/guides/{slug}` | Full guide. Unknown slugs return 404. |
 | POST | `/api/research-requests` | Validates the name or website. An existing guide returns `guide_exists` and is not rewritten. An unsafe URL returns 422. Without API keys, an unknown app returns 503 `research_unavailable`. With keys, a name or website alone returns 202 and a run id. A documentation URL is optional and is included in the four pages that get read. A second submission for the same in-flight app joins that run. |
 | POST | `/api/guides/{slug}/recheck` | Reads the docs again for a guide that already exists. Requires `docs_url` when research is configured. Saves a candidate and leaves the live guide unchanged. |
 | GET | `/api/guides/{slug}/candidate` | The pending candidate and which fields differ. 404 when nothing is waiting. |
-| POST | `/api/guides/{slug}/candidate/promote` | Replaces the live guide with the candidate. A later startup does not overwrite that promoted guide with the seed. |
+| POST | `/api/guides/{slug}/candidate/promote` | Replaces the live guide with the candidate. Startup leaves a promoted editorial guide in place. A snapshot in `backend/app/generated/` is written again on startup. |
 | POST | `/api/guides/{slug}/candidate/discard` | Drops the candidate. |
 | GET | `/api/research-runs/{id}` | Run status, evidence URLs, retrieval timestamps, and the claims each page supports. |
 | GET | `/api/research-runs/{id}/events` | Server-Sent Events. `Last-Event-ID` resumes after a disconnect. |
@@ -114,7 +129,7 @@ Pages are fetched with `trust_env` off, so `HTTP_PROXY` cannot point the reader 
 
 ## Evidence
 
-Seeded guides for GitHub, Google Calendar, and Slack were written from the pages in `docs/provider-research.md`, checked on 21 October 2026. Their source list is the citation panel on the guide. Individual seeded sentences are not each tied to one URL. Notion is a researched guide from a run on 22 October 2026 that started with `https://developers.notion.com`. A claim on that guide is stored only after it cites a page fetched for that run, and the guide shows that page's URL on the claim. The run did not establish difficulty, hands-on time, or an approval wait, so those fields stay unknown. Most of the saved steps cite `https://composio.dev/auth/notion`. The research run also stores the page title, retrieval time, and the claim keys that page supports.
+Seeded guides for GitHub, Google Calendar, and Slack were written from the pages in `docs/provider-research.md`, checked on 21 October 2026. Their source list is the citation panel on the guide. Individual seeded sentences are not each tied to one URL. The other 29 guides are snapshots of local research runs, checked in under `backend/app/generated/`. A researched claim is stored only after it cites a page fetched for that run, and the guide shows that page's URL on the claim. Notion’s run did not establish difficulty, hands-on time, or an approval wait, so those fields stay unknown. Most of the saved Notion steps cite `https://composio.dev/auth/notion`.
 
 **Documented** means the cited page states the claim and this project did not run it. **Inferred** means the wording is a reading of the retrieved pages, not a direct statement. **Unknown** means those pages do not establish it. **Uncertain** is an editorial label or an open question, including difficulty and hands-on duration, which the providers do not publish as a rating or a measured time. **Verified** would mean this project executed the setup. Nothing in the seed or the research pipeline uses it.
 
@@ -129,6 +144,6 @@ Approval waits are quoted only where a retrieved page states one. If two retriev
 - A page over 1.2 MB is truncated, so a claim can be checked only against the prefix that was stored.
 - Overlap checks catch claims that do not share wording with the cited page. A dropped "before", "unless", "except", or "only if" is marked inferred. Other paraphrases can still pass when they share enough words.
 - A restart fails an in-flight run and releases that app name. The duplicate lock is still one SQLite row in this process. Two servers writing the same database can race at insert time; the slug unique constraint then keeps the first guide.
-- Submitting GitHub, Google Calendar, or Slack through research returns the existing guide and does not rewrite it. Recheck stores a candidate beside that guide. The live text changes only when a person promotes the candidate. A promoted guide is marked researched, and the startup seed leaves it in place. Seeded claims do not carry a per-sentence source URL until that promotion.
-- Composio’s managed-OAuth catalog lists those three, and an own OAuth app is optional for them. The live toolkit API was not called, default scopes were not published, and no OAuth flow was executed.
+- Submitting an app that is already in the library returns that guide and does not rewrite it. Recheck stores a candidate beside that guide. The live text changes only when a person promotes the candidate. A promoted guide is marked researched. Startup still replaces a guide that has a snapshot in `backend/app/generated/` or an editorial entry in `backend/app/seed_data.py`. Seeded claims do not carry a per-sentence source URL until that promotion.
+- Composio’s managed-OAuth catalog lists GitHub, Google Calendar, and Slack, and an own OAuth app is optional for them. The live toolkit API was not called, default scopes were not published, and no OAuth flow was executed.
 - Google’s current web-client instructions say client secrets are not used for web applications, while Composio’s form asks for a client secret. That disagreement stays uncertain in the seeded Calendar guide.

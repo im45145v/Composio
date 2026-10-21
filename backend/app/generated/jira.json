@@ -1,0 +1,231 @@
+{
+  "slug": "jira",
+  "name": "Jira",
+  "summary": "This guide covers how to set up OAuth 2.0 (3LO) authentication for Jira Cloud by registering an OAuth integration in the Atlassian Developer Console, configuring the necessary callback URL, and entering the resulting credentials into Composio to enable Jira API access. Managed credentials are not provided; you must bring your own developer credentials.",
+  "decision": "To connect Jira Cloud via OAuth 2.0 (3LO), you must create your own OAuth app in the Atlassian Developer Console, configure the callback URL provided by Composio, add required permissions and scopes, and enter the resulting client credentials into Composio for use. Composio does not provide managed credentials for Jira; only bring-your-own is supported.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2.0 (3LO, Authorization Code Grant)",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Bring your own OAuth credentials only",
+    "status": "documented",
+    "note": "Composio does not provide managed OAuth credentials for Jira; users must register their own app and supply their own credentials.",
+    "source_url": "https://composio.dev/auth/jira"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "You are required to create and configure an OAuth app, manage credentials, and understand permission scopes. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "To connect Jira Cloud via OAuth 2.0 (3LO), you must create your own OAuth app in the Atlassian Developer Console, configure the callback URL provided by Composio, add required permissions and scopes, and enter the resulting client credentials into Composio for use. Composio does not provide managed credentials for Jira; only bring-your-own is supported.",
+    "managed": {
+      "value": "No, managed credentials are not provided for Jira OAuth 2.0 (3LO) in Composio.",
+      "status": "documented",
+      "note": "You must bring your own app credentials.",
+      "source_url": "https://composio.dev/auth/jira"
+    },
+    "bring_your_own": {
+      "value": "Yes, you must use your own custom developer credentials for Jira OAuth 2.0 (3LO).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/jira"
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v1/auth-apps/add",
+      "status": "documented",
+      "note": "This must be entered as the callback URL when configuring the OAuth app in Atlassian Developer Console.",
+      "source_url": "https://composio.dev/auth/jira"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Atlassian Developer Account",
+      "body": "A developer account on the Atlassian developer portal is required to register an OAuth app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/jira",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Access to Composio dashboard and project",
+      "body": "You must be able to access the Composio dashboard to configure Jira authentication settings.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/jira",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Create an Atlassian Developer Account",
+      "body": "Sign up at the Atlassian developer portal: https://developer.atlassian.com/console",
+      "status": "documented",
+      "note": "If you already have a developer account with access to Client ID and Client Secret, you may skip this step.",
+      "source_url": "https://composio.dev/auth/jira",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Register a new OAuth 2.0 Integration",
+      "body": "Navigate to https://developer.atlassian.com/console/myapps and create an application of OAuth 2.0 Integration type. Name your application and click Create.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Configure Authorization with Callback URL",
+      "body": "In the Atlassian Apps Console, go to the Authorization tab, click Configure, and enter Composio's callback URL: https://backend.composio.dev/api/v1/auth-apps/add. Click 'Save changes.'",
+      "status": "documented",
+      "note": "The redirect_uri in the OAuth flow must exactly match this URL.",
+      "source_url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Configure Required Scopes and Permissions",
+      "body": "In the Permissions tab of the Apps Console, add the 'Jira API' and configure the required scopes (e.g., read:jira-work, write:jira-work, etc.). Save your changes.",
+      "status": "documented",
+      "note": "Consult Composio's guide for scope recommendations.",
+      "source_url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Obtain OAuth Credentials",
+      "body": "Copy the Client ID and Client Secret from the app's Settings tab under Authentication Details.",
+      "status": "documented",
+      "note": "Do not share the client secret.",
+      "source_url": "https://composio.dev/auth/jira",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Configure OAuth in Composio",
+      "body": "In Composio dashboard, choose 'Create Auth Config', select Jira, use OAuth2 as the method, and enter the Client ID and Client Secret from the previous step.",
+      "status": "documented",
+      "note": "Managed credentials are not provided; you must provide your own.",
+      "source_url": "https://composio.dev/auth/jira",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Complete the OAuth Authorization Flow",
+      "body": "When prompted, authorize Composio to access your Jira instance via the web flow. If you see errors, check scope configuration.",
+      "status": "inferred",
+      "note": "OAuth flow requires a browser and user consent.",
+      "source_url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "No Managed OAuth Credentials",
+      "body": "You cannot proceed without creating your own OAuth app and client credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/jira",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "OAuth Flow Requires a Browser",
+      "body": "The user must complete authorization in a web browser to obtain an authorization code. Headless/scripted automation is not supported for this flow.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register an OAuth Integration in Atlassian Developer Console",
+      "body": "A human must create the app, enter the callback URL, select scopes, and save configuration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Manually Copy Client Credentials",
+      "body": "Copy Client ID and Client Secret from Atlassian Apps Console and paste into Composio.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/jira",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Authorize Access in Browser",
+      "body": "The end-user must approve access to their Jira account through a web browser as part of the OAuth flow.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Supply Jira Subdomain",
+      "body": "User must manually enter their Jira subdomain in Composio when connecting account.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/jira",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth 2.0 (3LO) apps",
+      "url": "https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/",
+      "publisher": "developer.atlassian.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting Up Jira",
+      "url": "https://composio.dev/auth/jira",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "OAuth setup help - Jira Cloud - The Atlassian Developer Community",
+      "url": "https://community.developer.atlassian.com/t/oauth-setup-help/55431",
+      "publisher": "community.developer.atlassian.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

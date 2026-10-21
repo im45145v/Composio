@@ -1,0 +1,221 @@
+{
+  "slug": "figma",
+  "name": "Figma",
+  "summary": "Figma requires you to set up an OAuth 2.0 application in their Developer Portal to enable authentication for your own or users' applications, with a process involving app registration, redirect URI configuration, and scope selection. The app may be published privately for your team/org with immediate use or publicly, which requires Figma review before becoming available to all users.",
+  "decision": "To connect an app to Figma using OAuth, you need to register your own OAuth app in the Figma Developer Portal, configure the necessary details and redirect URIs, select required scopes, and publish the app as private or public; public apps require Figma's review before use by external users.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2 is required for apps acting on behalf of users or for integrating with APIs such as the Embed API.",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developers.figma.com/docs/rest-api/authentication/"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Effort is needed to create and publish the OAuth app, select scopes, configure redirect URLs, and possibly complete a Figma review for public availability. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Typical setup includes app registration, form entry, and credential handling. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": "Public OAuth apps require Figma review before approval; private apps are immediately available within your team or organization.",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/"
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "To connect an app to Figma using OAuth, you need to register your own OAuth app in the Figma Developer Portal, configure the necessary details and redirect URIs, select required scopes, and publish the app as private or public; public apps require Figma's review before use by external users.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "No managed (shared or prebuilt) registration flow is described or provided. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "The app owner is responsible for registering and configuring their own OAuth application. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": "Redirect URIs must be configured in the OAuth app and should match your app's OAuth callback endpoints; for instance: https://api.klavis.ai/oauth/figma/callback.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Figma account",
+      "body": "You need either a personal or business Figma account to proceed.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://www.klavis.ai/docs/knowledge-base/oauth_app/figma",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Access to Figma Developer Portal",
+      "body": "You must be able to access and log into https://www.figma.com/developers/.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Valid callback/callback handling server or URL",
+      "body": "You are required to have a valid URL or endpoint on an external server to receive OAuth callbacks and handle token exchange.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Sign up or log in to the Figma Developer Portal",
+      "body": "Navigate to https://www.figma.com/developers/ and sign in with your Figma account.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create a new OAuth app",
+      "body": "Within 'My Apps', click 'Create a new app' and fill in the application's name, website, and logo as prompted.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Copy your OAuth credentials",
+      "body": "Once the app is created, copy the provided Client ID and Client Secret. The Client Secret is only shown once, so save it securely.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Configure redirect URI(s)",
+      "body": "On the OAuth credentials/settings page, add your app's OAuth callback URL(s). Figma will only redirect to these configured URIs.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Select OAuth scopes",
+      "body": "Pick the OAuth scopes required by your app (for example: files:read, file_content:read, openid, email, profile) depending on the intended functionality.",
+      "status": "documented",
+      "note": "Be sure the scopes cover your usage requirements.",
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Publish the OAuth app",
+      "body": "Decide whether your app should be private (for your team/org only; immediate use) or public (for all Figma users; requires Figma review and approval). Follow the configuration and, if public, provide review and testing instructions.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Integrate OAuth flow in your app",
+      "body": "Utilize the registered app's Client ID, redirect URI(s), and chosen scopes in your application's code to start the OAuth 2.0 authentication process.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Handle callback and token exchange",
+      "body": "When users are redirected to your callback, process the authorization code to exchange it for access and refresh tokens using your saved credentials. Use these tokens to make API calls.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "App registration in Figma Developer Portal",
+      "body": "A human must manually create and configure the OAuth app, entering its name, redirect URIs, website, and optionally logo.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Select and confirm OAuth scopes",
+      "body": "Someone must decide which OAuth scopes are necessary and select them in the app's configuration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Secure credential storage",
+      "body": "A person needs to securely save Client ID and especially the Client Secret, which is shown only once during registration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Authentication | Developer Docs",
+      "url": "https://developers.figma.com/docs/rest-api/authentication/",
+      "publisher": "developers.figma.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "OAuth apps | Developer Docs",
+      "url": "https://developers.figma.com/docs/rest-api/oauth-apps/",
+      "publisher": "developers.figma.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting Up Figma OAuth App",
+      "url": "https://www.klavis.ai/docs/knowledge-base/oauth_app/figma",
+      "publisher": "www.klavis.ai",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

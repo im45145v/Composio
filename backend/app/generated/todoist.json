@@ -1,0 +1,185 @@
+{
+  "slug": "todoist",
+  "name": "Todoist",
+  "summary": "Todoist is a task management platform that enables users to create to-do lists, set deadlines, collaborate on projects, and manage reminders with cross-platform sync. Through Composio, users can securely connect via managed OAuth and enable AI agents, such as Kimi Code, ChatGPT, and Claude, to interact with Todoist using a large set of tools and triggers, without managing OAuth tokens directly.",
+  "decision": "Follow the managed OAuth path: Use Composio-managed OAuth to connect Todoist. You do not need to create your own Todoist app or handle OAuth flows yourself. Instead, start your agent or interface (such as Kimi Code), add the Composio MCP server using the documented URL, and authorize via the OAuth prompt when requested within your setup or Composio\u2019s authorization page.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://docs.composio.dev/toolkits/todoist"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Setup path",
+    "status": "documented",
+    "note": "Composio provides managed OAuth, so you do not need to create or configure your own OAuth client for Todoist unless you have advanced requirements. Setup is completed through interactive agent prompts and the Composio authorization page.",
+    "source_url": "https://docs.composio.dev/toolkits/todoist"
+  },
+  "difficulty": {
+    "value": "Easy",
+    "status": "inferred",
+    "note": "Requires only basic interaction and approval for managed OAuth integration; no developer console or client registration required for end users.",
+    "source_url": "https://composio.dev/toolkits/todoist/framework/kimi"
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Steps involve running commands, entering a server URL, and OAuth approval; no coding, review, or credential management required. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "Users approve OAuth themselves; there is no external review or wait for Composio-managed flows. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "Follow the managed OAuth path: Use Composio-managed OAuth to connect Todoist. You do not need to create your own Todoist app or handle OAuth flows yourself. Instead, start your agent or interface (such as Kimi Code), add the Composio MCP server using the documented URL, and authorize via the OAuth prompt when requested within your setup or Composio\u2019s authorization page.",
+    "managed": {
+      "value": "Yes, managed OAuth is available and recommended for most users.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/todoist"
+    },
+    "bring_your_own": {
+      "value": "Not required unless you need advanced app controls.",
+      "status": "inferred",
+      "note": "Composio's managed OAuth is the default path; bringing your own Todoist API client is not described in any provided setup steps.",
+      "source_url": "https://docs.composio.dev/toolkits/todoist"
+    },
+    "redirect_uri": {
+      "value": null,
+      "status": "unknown",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Install your AI agent (such as Kimi Code)",
+      "body": "Install the AI agent you want to use with Todoist (e.g., run the Kimi Code install script or equivalent for your agent).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create (or sign in to) your Composio account",
+      "body": "You may need to sign in to Composio when prompted during the OAuth flow.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Launch and log in to your AI agent",
+      "body": "Start your agent (for example, run `kimi` if using Kimi Code) and complete its initial login flow.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Add Composio MCP server",
+      "body": "In your agent\u2019s UI, run the command to add a new MCP server and supply the server URL: `https://connect.composio.dev/mcp`. Assign an easy-to-remember name (e.g., Composio).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Restart/new session for your agent",
+      "body": "Restart the agent session so the new Composio MCP server is detected.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Initiate OAuth login for Composio within your agent",
+      "body": "Run the login command for the Composio MCP server in your agent\u2019s UI (e.g., `/mcp-config login Composio`). This will open Composio\u2019s authorization page or provide a URL to visit.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Approve the OAuth request",
+      "body": "On Composio\u2019s authorization page, approve access to your Todoist account. This step authorizes your AI agent to access Todoist using Composio-managed credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Confirm successful connection",
+      "body": "Back in the agent, check that the Composio MCP server is listed as connected and that Todoist-related tools are available.",
+      "status": "documented",
+      "note": "You may test the connection with status commands or attempt a supported Todoist action.",
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Sign in and approve OAuth in your browser",
+      "body": "You must personally log in and approve Composio\u2019s request to access your Todoist account during setup.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Manually trigger setup commands and input the Composio MCP server URL within your agent",
+      "body": "You must enter, paste, or select the Composio MCP server URL during the 'add server' step.",
+      "status": "inferred",
+      "note": "The retrieved pages do not state this in matching language.",
+      "source_url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Todoist",
+      "url": "https://docs.composio.dev/toolkits/todoist",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "How to integrate Todoist MCP with Kimi Code",
+      "url": "https://composio.dev/toolkits/todoist/framework/kimi",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Todoist MCP server for AI agents and assistants",
+      "url": "https://composio.dev/toolkits/todoist",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "slug": "monday",
+  "name": "Monday",
+  "summary": "monday.com is a work management platform with a robust OAuth 2.0 authentication mechanism for API integrations. You can use either a Composio-managed OAuth app or register and configure your own OAuth app in the Monday Developer Center. OAuth setup enables secure, scoped access to user and team data, automations, and board management via the Monday API.",
+  "decision": "You can use a Composio-managed OAuth app, or set up your own OAuth app through the Monday Developer Center. For most integrations, use the managed app unless you have requirements to bring your own credentials (such as exceeding shared app limits or particular security policies). If bringing your own, register a new app in Monday's developer portal, configure scopes and redirect URLs, then use the client credentials in your integration.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2.0",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developer.monday.com/apps/docs/oauth"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Setup path",
+    "status": "inferred",
+    "note": "Users may use the managed provider app for easiest setup, or bring their own credentials if they need custom permissions or branding.",
+    "source_url": "https://docs.composio.dev/toolkits/monday"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "The setup requires registering an app, specifying scopes and redirect URLs, saving credentials, and (optionally) promoting the app for production use. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Estimated from the number of manual steps, including logging in, registering, configuring scopes, and saving settings. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": "Flow is clearly described by both the provider (Monday) and third-party guides. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You can use a Composio-managed OAuth app, or set up your own OAuth app through the Monday Developer Center. For most integrations, use the managed app unless you have requirements to bring your own credentials (such as exceeding shared app limits or particular security policies). If bringing your own, register a new app in Monday's developer portal, configure scopes and redirect URLs, then use the client credentials in your integration.",
+    "managed": {
+      "value": "Composio-managed OAuth app is available and can be used for direct connections.",
+      "status": "documented",
+      "note": "Composio documentation specifies the availability of a managed app and provides the install link.",
+      "source_url": "https://docs.composio.dev/toolkits/monday"
+    },
+    "bring_your_own": {
+      "value": "Supported; register your own OAuth app in the Monday Developer Center.",
+      "status": "documented",
+      "note": "Both Composio and provider documentation detail bring-your-own setup.",
+      "source_url": "https://developer.monday.com/apps/docs/oauth"
+    },
+    "redirect_uri": {
+      "value": "https://api.nango.dev/oauth/callback (for Nango); https://oauth2.flowbuilder.eu.lansweeper.com/callback or https://oauth2.flowbuilder.us.lansweeper.com/callback (for Lansweeper); or the URI provided by your platform/integration.",
+      "status": "documented",
+      "note": "Third-party guides specify required redirect URIs for integrations; substitute as needed for your integration.",
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Have a Monday account",
+      "body": "A valid Monday.com account with permissions to access developer features.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Access the Monday Developer Center",
+      "body": "Log into your Monday account, click your profile icon, and select 'Developers' to reach the app creation page.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create a new OAuth app",
+      "body": "Click 'Create App', follow the wizard, and select your new app from the list.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Copy Client ID and Client Secret",
+      "body": "In your app's general settings or OAuth section, copy the Client ID and Client Secret for later use.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Configure redirect URLs",
+      "body": "In the app's OAuth or Redirect URLs section, add your integration's callback URL (e.g., https://api.nango.dev/oauth/callback for Nango).",
+      "status": "documented",
+      "note": "Use the appropriate redirect URI for your integration platform (Nango, Lansweeper, Composio, etc).",
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Set required OAuth scopes",
+      "body": "In the OAuth and Permissions or Permissions section, select all permission scopes your integration needs.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Save configuration",
+      "body": "Click 'Save Scopes' and ensure all changes are persisted.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Promote app to live (optional, for production use)",
+      "body": "Click 'Promote to Live', confirm, and (if distributing publicly) use 'Share App', accept terms, and submit as public.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Install the app in the target workspace",
+      "body": "Have a Monday workspace admin install the app in the relevant workspace before users attempt to authorize.",
+      "status": "documented",
+      "note": "Required for app connections; users will fail to connect if not installed.",
+      "source_url": "https://docs.composio.dev/toolkits/monday",
+      "audience": "shared"
+    },
+    {
+      "position": 9,
+      "title": "Follow your integration platform's OAuth connection flow",
+      "body": "Proceed with the OAuth 2.0 authorization flow, which may be initiated by your platform (e.g., Nango, Lansweeper, or Composio).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "App not installed in workspace",
+      "body": "If the Monday OAuth app is not installed in the workspace, users will not be able to complete authorization.",
+      "status": "inferred",
+      "note": "The cited page adds a condition this claim omits: Monday requires the OAuth app to be installed in the target workspace before users can authorize their accounts.",
+      "source_url": "https://docs.composio.dev/toolkits/monday",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register the OAuth app in the Monday Developer Center",
+      "body": "A person must manually create and configure the OAuth app settings, redirect URLs, and scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Save the client credentials",
+      "body": "A person must copy and securely store the Client ID and (optionally) the Client Secret.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Install the app in the required Monday workspace",
+      "body": "A workspace admin must approve and install the app for users to begin authorizing accounts.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/monday",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Initiate the OAuth authorization flow for each connecting user",
+      "body": "Each user must follow the OAuth connection flow online and approve scopes if prompted.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.monday.com/apps/docs/oauth",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth and Permissions",
+      "url": "https://developer.monday.com/apps/docs/oauth",
+      "publisher": "developer.monday.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "How to register your own Monday OAuth app",
+      "url": "https://nango.dev/docs/api-integrations/monday/how-to-register-your-own-monday-oauth-app",
+      "publisher": "nango.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Monday",
+      "url": "https://docs.composio.dev/toolkits/monday",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Monday Connector",
+      "url": "https://docs.lansweeper.com/docs/monday-connector",
+      "publisher": "docs.lansweeper.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

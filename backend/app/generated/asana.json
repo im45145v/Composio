@@ -1,0 +1,197 @@
+{
+  "slug": "asana",
+  "name": "Asana",
+  "summary": "This guide outlines how to set up an OAuth 2.0 connection between your application (or a platform like Composio) and Asana. Asana requires you to register an app in their developer console to obtain a Client ID and Client Secret, configure a secure redirect URI, and set the needed permission scopes. The OAuth flow allows your app to act on behalf of users securely by handling tokens rather than passwords.",
+  "decision": "You should create and register your own Asana OAuth app unless your platform (such as Composio) provides or confirms the use of a managed client. The passages focus on bringing your own app for both direct and Composio use cases.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2.0 (Authorization Code Grant)",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developers.asana.com/docs/oauth"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "Composio and Asana's documentation both require registering your own app and supplying your own credentials unless a managed path is specifically confirmed. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "The setup requires creating an app, managing secrets, and understanding the OAuth authorization code flow, but step-by-step guidance is provided. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Time taken to register the app, copy credentials, set correct redirect URI and scopes, and complete initial authorization flow. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You should create and register your own Asana OAuth app unless your platform (such as Composio) provides or confirms the use of a managed client. The passages focus on bringing your own app for both direct and Composio use cases.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": null,
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": "You must bring your own registered Asana OAuth app and client credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana"
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v3/toolkits/auth/callback",
+      "status": "documented",
+      "note": "Use this URI if integrating with Composio. For other platforms, enter the URI they provide.",
+      "source_url": "https://composio.dev/auth/asana"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Asana Account",
+      "body": "You must have an active Asana account to access the developer console and create an app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Go to the Asana Developer Console",
+      "body": "Visit https://app.asana.com/0/my-apps and log in.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.asana.com/docs/oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create a New App",
+      "body": "Click '+ New App' and provide the required app details: Name your app and (optionally) specify a website.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Set the Redirect URI",
+      "body": "For Composio, set the Redirect URI to: https://backend.composio.dev/api/v3/toolkits/auth/callback. For direct integrations, use your app's callback endpoint.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Configure Permission Scopes",
+      "body": "Select the minimum set of OAuth scopes your integration needs, such as tasks:read or tasks:write. You can toggle Full permissions or choose specific scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Save and Copy Client ID/Secret",
+      "body": "Once your app is created, copy the Client ID and Client Secret from the Asana developer console for later use.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Enter Credentials in Integration Platform",
+      "body": "Open your integration platform (e.g., Composio), navigate to the relevant authentication config and paste the Client ID, Client Secret, and Redirect URI, selecting OAuth2 as the authentication type.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Authorize and Connect",
+      "body": "Click 'Connect Account' within your integration platform. Log into Asana and approve the integration when prompted. On success, the platform will store your tokens securely.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register Asana app",
+      "body": "The user must manually create the app in Asana's Developer Console.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure OAuth scopes and Redirect URI",
+      "body": "The user must input and save the correct redirect/callback URI and choose only the scopes required for their app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Copy credentials to integration",
+      "body": "Paste the client ID and secret into your integration platform's auth configuration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Consent to OAuth prompt",
+      "body": "During first connection, log in to Asana and grant permission to the app.",
+      "status": "inferred",
+      "note": "The retrieved pages do not state this in matching language.",
+      "source_url": "https://composio.dev/auth/asana",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth",
+      "url": "https://developers.asana.com/docs/oauth",
+      "publisher": "developers.asana.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting up Asana",
+      "url": "https://composio.dev/auth/asana",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

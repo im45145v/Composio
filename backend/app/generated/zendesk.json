@@ -1,0 +1,218 @@
+{
+  "slug": "zendesk",
+  "name": "Zendesk",
+  "summary": "Zendesk provides customer support, ticketing, and integration APIs. OAuth2 is the recommended authentication method for apps, integrations, and bots, especially if they will be distributed to multiple Zendesk customers. For private or internal integrations, developers may use regular OAuth apps. Composio offers a managed OAuth option for Zendesk, or users can set up their own OAuth credentials.",
+  "decision": "You can use either Composio's managed OAuth for Zendesk or set up your own custom Zendesk OAuth credentials if you need more control or plan to distribute your integration. Follow the link to the Composio Zendesk OAuth credential creation guide if you choose bring-your-own. For distributing an app to multiple Zendesk customers, you must use a global OAuth client as per Zendesk's guidelines.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": "Zendesk supports OAuth2 as the primary authentication method for apps and integrations.",
+    "source_url": "https://developer.zendesk.com/api-reference/introduction/security-and-auth/"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Composio-managed OAuth or bring your own OAuth credentials",
+    "status": "documented",
+    "note": "Composio-managed OAuth is available for Zendesk (OAUTH2). You may also create and configure your own Zendesk OAuth credentials for use with Composio.",
+    "source_url": "https://docs.composio.dev/toolkits/zendesk"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Both approaches require some configuration; bring your own OAuth involves registering an OAuth client in Zendesk and editing app files. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Time includes registering the credentials, editing files, and completing admin actions. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "No mention of a review process or approval waiting period in the passages.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You can use either Composio's managed OAuth for Zendesk or set up your own custom Zendesk OAuth credentials if you need more control or plan to distribute your integration. Follow the link to the Composio Zendesk OAuth credential creation guide if you choose bring-your-own. For distributing an app to multiple Zendesk customers, you must use a global OAuth client as per Zendesk's guidelines.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "Composio-managed OAuth is available for Zendesk. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "Bring-your-own Zendesk OAuth credentials are supported with linked documentation. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": "https://zis.zendesk.com/api/services/zis/connections/oauth/callback",
+      "status": "documented",
+      "note": "This specific redirect URI is required for private Zendesk apps using OAuth, according to the guide for adding third-party OAuth in Support apps.",
+      "source_url": "https://developer.zendesk.com/documentation/apps/build-an-app/adding-third-party-oauth-to-a-support-app/"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Zendesk Account with Appropriate Plan",
+      "body": "You need a Zendesk account with the Suite Growth plan or above, or Support Professional plan or above.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/integration-services/zis-tutorials/zendesk-app-admin-interface/app-oauth/",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Admin Access",
+      "body": "You must be an admin or have access to an admin in your Zendesk account.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/integration-services/zis-tutorials/zendesk-app-admin-interface/app-oauth/",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Zendesk Command Line Interface (ZCLI)",
+      "body": "Install the Zendesk CLI (ZCLI) for app development and management.",
+      "status": "documented",
+      "note": "ZCLI is used to initialize, run, and test your Zendesk app.",
+      "source_url": "https://developer.zendesk.com/documentation/integration-services/zis-tutorials/zendesk-app-admin-interface/app-oauth/",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Familiarity with OAuth2",
+      "body": "You should understand basic OAuth2 concepts including authorization flows and access tokens.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/integration-services/zis-tutorials/zendesk-app-admin-interface/app-oauth/",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Decide on Managed or Own OAuth",
+      "body": "Choose whether to use Composio-managed OAuth (simpler setup, no client registration needed) or register your own Zendesk OAuth credentials (needed for more control or broad distribution).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/zendesk",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "If bringing your own, register an OAuth client in Zendesk",
+      "body": "Create an OAuth client in Zendesk Admin Center. Use the required redirect URI: https://zis.zendesk.com/api/services/zis/connections/oauth/callback",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/apps/build-an-app/adding-third-party-oauth-to-a-support-app/",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Save the OAuth client details securely",
+      "body": "Store the client ID and client secret securely as you will need them for your app or integration configuration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/integration-services/zis-tutorials/zendesk-app-admin-interface/app-oauth/",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Configure OAuth credentials in the app",
+      "body": "Add the OAuth client ID, client secret, authorization URI, and token URI to your application's configuration or manifest file.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/apps/build-an-app/adding-third-party-oauth-to-a-support-app/",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Authenticate and authorize the app",
+      "body": "Follow the OAuth flow using the configured app. Admin users will grant permissions, and the resulting access token can be used for API requests.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/integration-services/zis-tutorials/zendesk-app-admin-interface/app-oauth/",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Choose between managed OAuth and own credentials",
+      "body": "The person setting up the integration must decide whether to use Composio-managed OAuth or their own Zendesk OAuth app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/zendesk",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Register an OAuth app in Zendesk (if bringing your own)",
+      "body": "Use Zendesk Admin Center to create an OAuth client if not using Composio-managed OAuth.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/apps/build-an-app/adding-third-party-oauth-to-a-support-app/",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Enter credentials in configuration",
+      "body": "Input the saved client ID and secret into your application or service configuration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/apps/build-an-app/adding-third-party-oauth-to-a-support-app/",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Grant OAuth consent via Zendesk",
+      "body": "A Zendesk admin grants permissions to the OAuth app during the authorization step.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.zendesk.com/documentation/integration-services/zis-tutorials/zendesk-app-admin-interface/app-oauth/",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Security and authentication | Zendesk Developer Docszendev_horizontalzendev_horizontal",
+      "url": "https://developer.zendesk.com/api-reference/introduction/security-and-auth/",
+      "publisher": "developer.zendesk.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Part 1: Build a Zendesk app with OAuth | Zendesk Developer Docszendev_horizontalzendev_horizontal",
+      "url": "https://developer.zendesk.com/documentation/integration-services/zis-tutorials/zendesk-app-admin-interface/app-oauth/",
+      "publisher": "developer.zendesk.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Zendesk",
+      "url": "https://docs.composio.dev/toolkits/zendesk",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Adding third-party OAuth to a Support app | Zendesk Developer Docszendev_horizontalzendev_horizontal",
+      "url": "https://developer.zendesk.com/documentation/apps/build-an-app/adding-third-party-oauth-to-a-support-app/",
+      "publisher": "developer.zendesk.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

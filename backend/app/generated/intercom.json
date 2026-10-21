@@ -1,0 +1,191 @@
+{
+  "slug": "intercom",
+  "name": "Intercom",
+  "summary": "Intercom offers customer engagement and support tools, and its OAuth2 API allows access to user, conversation, and workspace data. Public integrations must use OAuth, while private apps may use Access Tokens. The OAuth process requires app registration, permission selection, and regionalized redirect URIs.",
+  "decision": "If you are creating a public integration that needs to access other Intercom workspaces, use the OAuth setup described in Intercom's developer documentation. Composio-managed OAuth is available, so you may use either the managed option or bring your own app, depending on your needs.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth2",
+    "status": "documented",
+    "note": "Intercom requires OAuth2 for public integrations.",
+    "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Use either Composio-managed OAuth or supply your own Intercom app credentials.",
+    "status": "documented",
+    "note": "Composio-managed OAuth is explicitly available for Intercom.",
+    "source_url": "https://docs.composio.dev/toolkits/intercom"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Requires app registration, scope selection, redirect URL configuration, OAuth flow and possible approval. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Register app, configure scopes and redirect URIs, test the OAuth flow, and (optionally) prepare for app review. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "Approval wait applies only if submitting to the app store for review.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "If you are creating a public integration that needs to access other Intercom workspaces, use the OAuth setup described in Intercom's developer documentation. Composio-managed OAuth is available, so you may use either the managed option or bring your own app, depending on your needs.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "Composio-managed OAuth is specifically supported. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "You may provide your own Intercom credentials and configure OAuth manually. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": null,
+      "status": "unknown",
+      "note": "No passage lists a required redirect URI for Composio. Intercom apps must use HTTPS and configure redirect URLs to receive the authorization code.",
+      "source_url": null
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Intercom Developer Account",
+      "body": "You must have an Intercom workspace and access to the Developer Hub.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Register your app in Intercom Developer Hub",
+      "body": "Create an app in your Intercom workspace's Developer Hub. Select the OAuth option in the app's Authentication section.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure Redirect URLs",
+      "body": "Add one or more HTTPS redirect URLs for your app, which Intercom will POST to after your user authorizes access.",
+      "status": "documented",
+      "note": "These must use HTTPS; multiple URLs are allowed for different environments such as testing and production.",
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Select Access Permissions (OAuth Scopes)",
+      "body": "Choose only the required scopes your application needs, as unnecessary scopes will prolong approval and may cause rejection. If using Canvas Kit, required scopes will be pre-selected and cannot be unselected.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Initiate the OAuth Flow",
+      "body": "Redirect users to the region-appropriate Intercom OAuth endpoint using your application's client_id and a state parameter. After approval, Intercom redirects the user to your redirect URL with an authorization code.",
+      "status": "documented",
+      "note": "Use the host that matches the user's Intercom workspace region (US, EU, AU) for best experience.",
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Exchange Authorization Code for Access Token",
+      "body": "Make a POST request to https://api.intercom.io/auth/eagle/token with your client_id, client_secret, the received code, and your redirect URI to receive an access token.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Use the Access Token",
+      "body": "Make authenticated API requests to Intercom by passing the token as an Authorization:Bearer header.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register Application",
+      "body": "Sign in to the Intercom Developer Hub and create/register your app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure Redirect URLs and Permissions",
+      "body": "Manually enter and confirm correct redirect URLs and select required permission scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Approve Consent Dialog",
+      "body": "Manually initiate and approve the OAuth flow via the browser to grant access.",
+      "status": "inferred",
+      "note": "The retrieved pages do not state this in matching language.",
+      "source_url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Authentication | Intercom and Fin Developer Platform",
+      "url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication",
+      "publisher": "developers.intercom.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting up OAuth | Intercom and Fin Developer Platform",
+      "url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/setting-up-oauth",
+      "publisher": "developers.intercom.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Intercom",
+      "url": "https://docs.composio.dev/toolkits/intercom",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "OAuth Scopes",
+      "url": "https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/oauth-scopes",
+      "publisher": "developers.intercom.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "slug": "calendly",
+  "name": "Calendly",
+  "summary": "The app connects to Calendly using OAuth 2.0. You must register your own OAuth app through the Calendly Developer Portal and configure its redirect URI to match the Composio callback. You then supply your client credentials in the Composio dashboard to enable OAuth-based authentication and access to the Calendly API.",
+  "decision": "You must register your own Calendly OAuth application by visiting the Calendly Developer Portal, choosing to create a new app, specifying required fields\u2014critically including the redirect URI https://backend.composio.dev/api/v3/toolkits/auth/callback\u2014then copying the generated client ID and client secret into the Composio dashboard. Composio requires you to use your own developer authentication. Although Composio guides the configuration, the Calendly developer portal is the place where you create and manage the OAuth app.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developer.calendly.com/docs/authentication/creating-an-oauth-app"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "Composio requires you to supply your own Calendly OAuth app credentials. You cannot use the integration without creating and configuring your own Calendly app, unless you have already created one. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Requires registering a new app in the Calendly developer dashboard, configuring scopes and redirect URI, and filling in the resulting credentials in Composio. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "No indication of needing a review or manual approval step from Calendly once the app is created.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You must register your own Calendly OAuth application by visiting the Calendly Developer Portal, choosing to create a new app, specifying required fields\u2014critically including the redirect URI https://backend.composio.dev/api/v3/toolkits/auth/callback\u2014then copying the generated client ID and client secret into the Composio dashboard. Composio requires you to use your own developer authentication. Although Composio guides the configuration, the Calendly developer portal is the place where you create and manage the OAuth app.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": null,
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": "Yes, you must bring your own Calendly OAuth app and provide the credentials to Composio.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/calendly"
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v3/toolkits/auth/callback",
+      "status": "documented",
+      "note": "Must be set as the Redirect URI in your Calendly OAuth app, with https, no trailing slash, and must exactly match in Calendly and Composio.",
+      "source_url": "https://composio.dev/auth/calendly"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Calendly Developer account",
+      "body": "Sign up for a Calendly developer account using Github or Google via the developer portal.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.calendly.com/docs/authentication/creating-an-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Composio account",
+      "body": "You need access to the Composio dashboard to finish the OAuth configuration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/calendly",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Sign in to Calendly Developer Portal",
+      "body": "Visit https://developer.calendly.com/ and sign in or register for a developer account using Github or Google.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.calendly.com/docs/authentication/creating-an-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create New OAuth Application",
+      "body": "Click 'My Apps' and then 'Create New App'. Provide the app name, select 'Web' as the kind of app, and pick your environment (Sandbox for development, Production to go live).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.calendly.com/docs/authentication/creating-an-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Configure Redirect URI",
+      "body": "Set the redirect URI for your OAuth app to: https://backend.composio.dev/api/v3/toolkits/auth/callback. Ensure it uses https, with no trailing slash, and exactly matches the value used in your Composio configuration.",
+      "status": "documented",
+      "note": "This step is critical for the OAuth callback to succeed.",
+      "source_url": "https://composio.dev/auth/calendly",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Select Required Scopes",
+      "body": "Choose the OAuth scopes necessary for your integration. Common scopes include: default, users:read, events:read, event_types:read, webhook_subscriptions:write.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/calendly",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Copy Client ID and Client Secret",
+      "body": "After app creation, Calendly will display the Client ID and Client Secret. Copy and save them safely, as you cannot view the secret again.",
+      "status": "documented",
+      "note": "Keep these confidential; you'll need them in the next step.",
+      "source_url": "https://composio.dev/auth/calendly",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Configure Authentication in Composio",
+      "body": "In the Composio dashboard (https://platform.composio.dev/), begin creating a new Auth Config for Calendly. Set authentication type to OAuth2 and enable 'Use your own developer authentication'. Paste your Client ID and Client Secret into the Manage Auth Config section.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/calendly",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Save and Store Auth Config ID",
+      "body": "After creating your Auth Config, copy the generated Auth Config ID from Composio and store it securely.",
+      "status": "documented",
+      "note": "You use this Auth Config ID in your code to authenticate requests.",
+      "source_url": "https://composio.dev/auth/calendly",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register Calendly developer account",
+      "body": "A human must sign up for a Calendly developer account if they haven't already.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.calendly.com/docs/authentication/creating-an-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create and configure OAuth app in developer portal",
+      "body": "A human fills in all required app registration fields, including redirect URI, in the Calendly developer portal.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.calendly.com/docs/authentication/creating-an-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Manually input credentials into Composio",
+      "body": "A human must copy the Client ID and Client Secret from Calendly and enter them in Composio.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/calendly",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Creating an OAuth app",
+      "url": "https://developer.calendly.com/docs/authentication/creating-an-oauth-app",
+      "publisher": "developer.calendly.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting up Calendly",
+      "url": "https://composio.dev/auth/calendly",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

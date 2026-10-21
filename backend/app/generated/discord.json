@@ -1,0 +1,139 @@
+{
+  "slug": "discord",
+  "name": "Discord",
+  "summary": "Discord offers OAuth2 as a way for applications to authenticate users and access API resources. Several OAuth2 flows are available for different use cases.",
+  "decision": "Begin setting up OAuth2 for your Discord application by registering for a developer application to obtain essential credentials, then select the right OAuth2 flow based on your requirements.",
+  "origin": "editorial",
+  "auth_type": {
+    "value": "OAuth2 is the standard authorization framework used by Discord.",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://docs.discord.com/developers/topics/oauth2"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "Begin setting up OAuth2 for your Discord application by registering for a developer application to obtain essential credentials, then select the right OAuth2 flow based on your requirements.",
+    "managed": {
+      "value": "Yes, managed OAuth2 is available.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/discord"
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": null,
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": null,
+      "status": "unknown",
+      "note": null,
+      "source_url": "https://docs.discord.com/developers/topics/oauth2"
+    }
+  },
+  "prerequisites": [],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Register your application",
+      "body": "Visit the Discord Developer Portal and create a new application to obtain a client ID and client secret.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.discord.com/developers/topics/oauth2",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Decide on OAuth2 flow",
+      "body": "Choose the appropriate OAuth2 flow such as authorization code or client credentials based on your needs.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.discord.com/developers/topics/oauth2",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Configure redirect URI",
+      "body": "Set the redirect URI in your application's settings in the Developer Portal.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.discord.com/developers/topics/oauth2",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register an application",
+      "body": "Create a new application in the Discord Developer Portal to initiate your OAuth2 setup.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.discord.com/developers/topics/oauth2",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Implement OAuth2 flow",
+      "body": "Develop the necessary code for implementing the OAuth2 flow selected for your application.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.discord.com/developers/topics/oauth2",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth2",
+      "url": "https://docs.discord.com/developers/topics/oauth2",
+      "publisher": "docs.discord.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Discord",
+      "url": "https://docs.composio.dev/toolkits/discord",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "OAuth2 and Permissions",
+      "url": "https://docs.discord.com/developers/platform/oauth2-and-permissions",
+      "publisher": "docs.discord.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

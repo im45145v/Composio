@@ -1,0 +1,246 @@
+{
+  "slug": "airtable",
+  "name": "Airtable",
+  "summary": "This guide covers setting up OAuth2 authentication with Airtable by registering your own OAuth app via the Airtable Developer/Builder Hub. You will use the official Airtable OAuth integration flow to obtain the necessary credentials (Client ID, Client Secret), register a redirect URL (as required by your platform, such as Composio), set the correct scopes, and connect your account for token-based access.",
+  "decision": "To set up OAuth with Airtable, register a new OAuth integration in the Airtable Developer (or Builder) Hub, provide the correct redirect URI for your integration platform, copy the Client ID and Client Secret, add and save the recommended scopes, and authorize your account via the consent screen. Complete the remaining steps in your integration platform (e.g., Composio dashboard), ensuring the redirect URI matches exactly. If you do not already have OAuth credentials, you must use this path.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://airtable.com/developers/web/api/oauth-reference"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Setup path",
+    "status": "inferred",
+    "note": "This is inferred because provider platforms (Composio, Amazon Quick) support both managed and own-app flows; you must use your own app if the integration platform requires your credentials.",
+    "source_url": "https://composio.dev/auth/airtable"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Requires manual registration in the Airtable Developer Hub, copying values, and operating both the Airtable and integration platform interfaces. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Based on manual completion of app registration, copying of credentials, setting up scopes, pasting values, and authorizing account access. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "No explicit mention of a manual approval/reviewer step after app registration in the cited passages.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": "Multiple sources (official Airtable and third parties) document and overlap in the workflow for registering an OAuth app and enabling OAuth2 access. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "To set up OAuth with Airtable, register a new OAuth integration in the Airtable Developer (or Builder) Hub, provide the correct redirect URI for your integration platform, copy the Client ID and Client Secret, add and save the recommended scopes, and authorize your account via the consent screen. Complete the remaining steps in your integration platform (e.g., Composio dashboard), ensuring the redirect URI matches exactly. If you do not already have OAuth credentials, you must use this path.",
+    "managed": {
+      "value": "Supported in Amazon Quick and possibly other third-party tools",
+      "status": "inferred",
+      "note": "Amazon Quick supports a Default OAuth app flow where you do not register your own app. The retrieved pages do not state this in matching language.",
+      "source_url": "https://docs.aws.amazon.com/quick/latest/userguide/airtable-integration.html"
+    },
+    "bring_your_own": {
+      "value": "Required for Composio and any platform needing your own branded app or custom settings.",
+      "status": "documented",
+      "note": "Composio and Amazon Quick 'Custom OAuth app' flows both require registering your own app and providing your credentials.",
+      "source_url": "https://composio.dev/auth/airtable"
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v3/toolkits/auth/callback",
+      "status": "documented",
+      "note": "Use this callback URL for Composio as stated in the official Composio guide. Amazon Quick has its own pattern unrelated to Composio.",
+      "source_url": "https://composio.dev/auth/airtable"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Create an Airtable Account",
+      "body": "You need an active Airtable account with access to the necessary bases or data.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.transmitsecurity.com/guides/automated-workflows/integrations/builtin/credentials/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Access to Airtable Developer Hub",
+      "body": "You must be able to access the Airtable Developer or Builder Hub to register a new OAuth integration.",
+      "status": "documented",
+      "note": "Also called Builder Hub in some documentation.",
+      "source_url": "https://developer.transmitsecurity.com/guides/automated-workflows/integrations/builtin/credentials/airtable",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Navigate to Airtable Developer/Builder Hub",
+      "body": "Go to https://airtable.com/developers/web/api or https://airtable.com/create/oauth to begin the OAuth integration registration process.",
+      "status": "documented",
+      "note": "URLs are provided in both Composio and Amazon Quick guides.",
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Register New OAuth Integration",
+      "body": "In the Developer/Builder Hub, select 'OAuth integrations' and then '+ New OAuth Integration' (or 'Register new OAuth integration'). Enter a name and optional description/website for the app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Configure the Redirect URI",
+      "body": "Paste the integration platform's required redirect URL into the 'OAuth redirect URLs' field. For Composio, use: https://backend.composio.dev/api/v3/toolkits/auth/callback (no trailing slash, protocol must be https).",
+      "status": "documented",
+      "note": "Composio provides the required URL. Amazon Quick requires its own URL.",
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Generate Client ID and Client Secret",
+      "body": "After registering your integration, Airtable will provide a Client ID. Use the 'Generate client secret' option to obtain the Client Secret.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Set OAuth Scopes",
+      "body": "In the app configuration, add scopes according to your requirements. Common recommended scopes are: data.records:read, data.records:write, schema.bases:read. Additional scopes can be added (e.g., data.recordComments:read/write, schema.bases:write, user.email:read) if needed.",
+      "status": "documented",
+      "note": "Composio and Amazon Quick both list common scopes.",
+      "source_url": "https://developer.transmitsecurity.com/guides/automated-workflows/integrations/builtin/credentials/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Save Changes and Record Credentials",
+      "body": "Record your OAuth Client ID and Client Secret. Save the integration in Airtable.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Configure the Integration Platform",
+      "body": "Open your integration platform (e.g., Composio dashboard), select Airtable, choose OAuth2 authentication, and paste the Client ID, Client Secret, and configure scopes to match your Airtable app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Authorize Connection",
+      "body": "Initiate the OAuth flow by clicking 'Connect Account' (or equivalent). In the authorization dialog, log in to your Airtable account, review and accept the requested permissions, select bases/workspaces, and approve the connection.",
+      "status": "documented",
+      "note": "Composio provides stepwise instructions.",
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 9,
+      "title": "Verify Connection and Complete Setup",
+      "body": "Ensure your integration platform confirms successful connection, and use the provided Auth Config ID (Composio) or corresponding identifier for further API use.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "Lack of Developer Hub/Builder Hub Access",
+      "body": "You cannot complete the OAuth registration and obtain required credentials without access to the correct Airtable interface.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Redirect URI Mismatch",
+      "body": "The redirect URI entered in Airtable must match the one used by your integration platform exactly, or OAuth authorization will fail.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register an OAuth application in Airtable",
+      "body": "Log in to Airtable and manually register the OAuth app, entering redirect URI and scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Copy and paste credentials",
+      "body": "Copy the Client ID and Client Secret and securely enter them into your integration platform\u2019s configuration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Initiate and complete the OAuth consent flow",
+      "body": "Manually approve access in the consent dialog during authorization, selecting bases/workspaces as needed.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/airtable",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth reference",
+      "url": "https://airtable.com/developers/web/api/oauth-reference",
+      "publisher": "airtable.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Airtable credentials",
+      "url": "https://developer.transmitsecurity.com/guides/automated-workflows/integrations/builtin/credentials/airtable",
+      "publisher": "developer.transmitsecurity.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting up Airtable",
+      "url": "https://composio.dev/auth/airtable",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Airtable integration",
+      "url": "https://docs.aws.amazon.com/quick/latest/userguide/airtable-integration.html",
+      "publisher": "docs.aws.amazon.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

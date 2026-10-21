@@ -1,0 +1,227 @@
+{
+  "slug": "clickup",
+  "name": "ClickUp",
+  "summary": "You can connect ClickUp using either OAuth (for apps used by others) or a personal API token (for your own/testing use). OAuth lets users securely authorize your integration with their Workspace. Creating an OAuth app is restricted to Workspace owners/admins.",
+  "decision": "If you're using Composio-managed OAuth, you can use it directly. Otherwise, to set up your own ClickUp OAuth app, you must log in as a Workspace owner/admin, create an app in ClickUp settings under Apps, and set your integration's redirect URL. After getting your client ID and secret, you must implement the OAuth Authorization Code flow: direct users to the ClickUp authorization URL, capture the code, and exchange it for an access token using the access token endpoint.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth2 - Authorization Code",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://developer.clickup.com/docs/authentication"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Composio-managed OAuth available, or use your own app if you prefer",
+    "status": "documented",
+    "note": "Composio-managed OAuth is available according to Composio documentation; you can use it, or set up your own app.",
+    "source_url": "https://docs.composio.dev/toolkits/clickup"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Creating an OAuth app requires admin access and involves several steps, including handling redirect URLs and exchanging codes. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Estimate includes logging into ClickUp, making an app, copying IDs, and configuring your integration. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "If you're using Composio-managed OAuth, you can use it directly. Otherwise, to set up your own ClickUp OAuth app, you must log in as a Workspace owner/admin, create an app in ClickUp settings under Apps, and set your integration's redirect URL. After getting your client ID and secret, you must implement the OAuth Authorization Code flow: direct users to the ClickUp authorization URL, capture the code, and exchange it for an access token using the access token endpoint.",
+    "managed": {
+      "value": "Yes, Composio-managed OAuth is available.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/clickup"
+    },
+    "bring_your_own": {
+      "value": "Yes, you can bring your own OAuth app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication"
+    },
+    "redirect_uri": {
+      "value": "You must enter your integration's redirect URL when creating your OAuth app. For integrations, use the provided redirect URL from your integration platform, such as n8n or Composio, or your own.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "ClickUp Workspace owner or admin access",
+      "body": "Only owners/admins can create OAuth apps in ClickUp.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "A redirect URL for your integration",
+      "body": "You need a redirect URL for your app\u2014this may come from your integration platform or your service.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Log in to ClickUp as Workspace owner or admin",
+      "body": "Go to your ClickUp Workspace. Only owners or admins can register OAuth apps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Open Apps settings",
+      "body": "Click your avatar, select 'Settings', then go to 'Apps'.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Create a new OAuth app",
+      "body": "Click 'Create new app', provide a name, and enter your integration's redirect URL.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Obtain Client ID and Secret",
+      "body": "After creation, save the client_id and secret ClickUp provides.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Set up authorization flow",
+      "body": "Send users to https://app.clickup.com/api?client_id={client_id}&redirect_uri={redirect_uri} so they can approve access.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Handle authorization code",
+      "body": "Users, after approving, are redirected to your redirect URL with a code parameter.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Exchange code for access token",
+      "body": "POST to https://api.clickup.com/api/v2/oauth/token with client_id, client_secret, and code to obtain an access token.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Authorize API requests",
+      "body": "For each API call, include the header Authorization: Bearer {access_token}.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Log in to ClickUp as an owner/admin",
+      "body": "You must sign in as an owner or admin to create your OAuth app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create the app in ClickUp settings",
+      "body": "Manually navigate to 'Settings' > 'Apps' > 'Create new app'",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Enter the redirect URL",
+      "body": "Manually copy your integration's redirect URL into the ClickUp app form.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Authorize the app as a user",
+      "body": "End users must grant access to their Workspace via the authorization URL.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developer.clickup.com/docs/authentication",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Authentication",
+      "url": "https://developer.clickup.com/docs/authentication",
+      "publisher": "developer.clickup.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "ClickUp credentials",
+      "url": "https://docs.n8n.io/integrations/builtin/credentials/clickup",
+      "publisher": "docs.n8n.io",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "ClickUp",
+      "url": "https://docs.composio.dev/toolkits/clickup",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Get Access Token",
+      "url": "https://developer.clickup.com/reference/getaccesstoken",
+      "publisher": "developer.clickup.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

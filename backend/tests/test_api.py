@@ -18,6 +18,76 @@ EXPECTED_COUNTS = {
     "slack": {"steps": 8, "blockers": 7, "human_actions": 6, "prerequisites": 3},
     "google-calendar": {"steps": 8, "blockers": 8, "human_actions": 6, "prerequisites": 4},
 }
+LIBRARY_SLUGS = [
+    "airtable",
+    "asana",
+    "bitbucket",
+    "box",
+    "calendly",
+    "clickup",
+    "confluence",
+    "discord",
+    "docusign",
+    "dropbox",
+    "figma",
+    "github",
+    "gitlab",
+    "gmail",
+    "google-calendar",
+    "google-drive",
+    "hubspot",
+    "intercom",
+    "jira",
+    "linear",
+    "linkedin",
+    "mailchimp",
+    "monday",
+    "notion",
+    "pipedrive",
+    "shopify",
+    "slack",
+    "stripe",
+    "todoist",
+    "trello",
+    "zendesk",
+    "zoom",
+]
+OWN_APP_SLUGS = [
+    "asana",
+    "calendly",
+    "discord",
+    "docusign",
+    "figma",
+    "gitlab",
+    "gmail",
+    "google-drive",
+    "linkedin",
+    "mailchimp",
+    "notion",
+    "pipedrive",
+    "stripe",
+    "zoom",
+]
+MANAGED_SLUGS = [
+    "airtable",
+    "bitbucket",
+    "box",
+    "clickup",
+    "confluence",
+    "dropbox",
+    "github",
+    "google-calendar",
+    "hubspot",
+    "intercom",
+    "jira",
+    "linear",
+    "monday",
+    "shopify",
+    "slack",
+    "todoist",
+    "trello",
+    "zendesk",
+]
 
 
 def test_health(client: TestClient):
@@ -26,15 +96,19 @@ def test_health(client: TestClient):
     assert response.json() == {"status": "ok", "research": "unavailable"}
 
 
-def test_directory_lists_three_distinct_guides(client: TestClient):
+def test_directory_lists_the_library(client: TestClient):
     response = client.get("/api/guides")
     assert response.status_code == 200
     body = response.json()
-    assert body["count"] == 4
+    assert body["count"] == 32
     slugs = [guide["slug"] for guide in body["guides"]]
-    assert slugs == ["github", "google-calendar", "notion", "slack"]
+    assert slugs == LIBRARY_SLUGS
     assert all(guide["tested"] is False for guide in body["guides"])
-    assert {guide["auth_type"]["value"] for guide in body["guides"]} == {"OAuth 2.0"}
+    by_slug = {guide["slug"]: guide for guide in body["guides"]}
+    assert by_slug["github"]["auth_type"]["value"] == "OAuth 2.0"
+    assert by_slug["slack"]["auth_type"]["value"] == "OAuth 2.0"
+    assert by_slug["google-calendar"]["auth_type"]["value"] == "OAuth 2.0"
+    assert all(guide["auth_type"]["value"] for guide in body["guides"])
 
 
 def test_search_is_case_insensitive_and_empty_query_is_honest(client: TestClient):
@@ -45,6 +119,7 @@ def test_search_is_case_insensitive_and_empty_query_is_honest(client: TestClient
     assert [guide["slug"] for guide in quota.json()["guides"]] == [
         "github",
         "google-calendar",
+        "linkedin",
         "slack",
     ]
 
@@ -53,19 +128,15 @@ def test_search_is_case_insensitive_and_empty_query_is_honest(client: TestClient
     assert missing.json() == {"guides": [], "count": 0}
 
     blank = client.get("/api/guides", params={"q": "   "})
-    assert blank.json()["count"] == 4
+    assert blank.json()["count"] == 32
 
 
 def test_setup_path_filter(client: TestClient):
     own_app = client.get("/api/guides", params={"path": "own_app_unless_confirmed"})
-    assert [guide["slug"] for guide in own_app.json()["guides"]] == ["notion"]
+    assert [guide["slug"] for guide in own_app.json()["guides"]] == OWN_APP_SLUGS
 
     managed = client.get("/api/guides", params={"path": "managed_or_own"})
-    assert [guide["slug"] for guide in managed.json()["guides"]] == [
-        "github",
-        "google-calendar",
-        "slack",
-    ]
+    assert [guide["slug"] for guide in managed.json()["guides"]] == MANAGED_SLUGS
 
     rejected = client.get("/api/guides", params={"path": "magic"})
     assert rejected.status_code == 400
@@ -186,16 +257,16 @@ def test_research_is_unavailable_and_creates_nothing(client: TestClient):
     before = client.get("/api/guides").json()["count"]
     response = client.post(
         "/api/research-requests",
-        json={"app_name": "  Linear  ", "docs_url": "https://developers.linear.app"},
+        json={"app_name": "  Basecamp  ", "docs_url": "https://github.com/basecamp/bc3-api"},
     )
     assert response.status_code == 503
     body = response.json()
     assert body["code"] == "research_unavailable"
     assert body["guide_created"] is False
-    assert body["app_name"] == "Linear"
+    assert body["app_name"] == "Basecamp"
     assert "model provider" in body["message"]
     assert client.get("/api/guides").json()["count"] == before
-    assert client.get("/api/guides/linear").status_code == 404
+    assert client.get("/api/guides/basecamp").status_code == 404
 
 
 def test_research_rejects_blank_names_and_bad_urls(client: TestClient):
@@ -224,4 +295,4 @@ def test_seed_is_idempotent(tmp_path, monkeypatch):
     with TestClient(application) as client:
         github = client.get("/api/guides/github").json()
         assert len(github["steps"]) == EXPECTED_COUNTS["github"]["steps"]
-        assert client.get("/api/guides").json()["count"] == 4
+        assert client.get("/api/guides").json()["count"] == 32

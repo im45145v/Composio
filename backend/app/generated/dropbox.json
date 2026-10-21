@@ -1,0 +1,185 @@
+{
+  "slug": "dropbox",
+  "name": "Dropbox",
+  "summary": "Dropbox offers a secure cloud storage API utilizing OAuth 2.0; Composio supports Dropbox integrations using either a Composio-managed OAuth flow or user-supplied Dropbox app credentials.",
+  "decision": "Use the Composio-managed OAuth flow for Dropbox unless you specifically want to create and supply your own Dropbox app credentials; either way, you must ensure the Dropbox app\u2019s callback matches the current Composio auth-config redirect URL.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://docs.composio.dev/toolkits/dropbox"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Use Composio-managed OAuth by default or provide your own Dropbox OAuth app credentials if desired",
+    "status": "documented",
+    "note": "Composio-managed authentication is the standard; custom (bring-your-own) app credentials are also supported and documented.",
+    "source_url": "https://docs.composio.dev/toolkits/dropbox"
+  },
+  "difficulty": {
+    "value": "Easy for managed OAuth; more involved if using your own app credentials (Dropbox app registration, permission selection, redirect URI configuration).",
+    "status": "inferred",
+    "note": "Managed OAuth requires only approval and connecting via Composio; own app requires Dropbox console setup and credential management.",
+    "source_url": "https://docs.composio.dev/kb/guide/toolkits-dropbox"
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": "App review may be required if you request broad Dropbox scopes during app registration.",
+    "status": "inferred",
+    "note": "Dropbox may require additional review for custom apps with wide permissions.",
+    "source_url": "https://docs.dropboxapi.com/dropbox-api/docs/oauth.md"
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "Use the Composio-managed OAuth flow for Dropbox unless you specifically want to create and supply your own Dropbox app credentials; either way, you must ensure the Dropbox app\u2019s callback matches the current Composio auth-config redirect URL.",
+    "managed": {
+      "value": "Yes, Composio-managed OAuth is available for Dropbox.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/dropbox"
+    },
+    "bring_your_own": {
+      "value": "Yes, you can configure Composio to use your own Dropbox OAuth app credentials if preferred.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/dropbox"
+    },
+    "redirect_uri": {
+      "value": "the exact callback shown by the current Composio auth-config flow",
+      "status": "documented",
+      "note": "Do not use legacy or example callback values\u2014use the callback URL exactly as shown in the latest Composio OAuth setup.",
+      "source_url": "https://docs.composio.dev/kb/guide/toolkits-dropbox"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Dropbox account",
+      "body": "You must have a Dropbox account to register a Dropbox app or connect to Dropbox via OAuth.",
+      "status": "inferred",
+      "note": "The cited page adds a condition this claim omits: If you'd like to quickly test out the Dropbox APIs using your own Dropbox account before implementing OAuth, you can generate an access token from your newly created app in [My apps](https://www.dropbox.com/developers/apps) by pressing the button that says \"Generate\" in the OAuth 2 section of your a",
+      "source_url": "https://docs.dropboxapi.com/dropbox-api/docs/oauth.md",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Composio access",
+      "body": "Access to Composio via integration, SDK, or account.",
+      "status": "inferred",
+      "note": "Integrating Composio-managed toolkits requires Composio platform access.",
+      "source_url": "https://docs.composio.dev/kb/guide/toolkits-dropbox",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "If using your own Dropbox app, register it",
+      "body": "Go to the Dropbox App Console (https://www.dropbox.com/developers/apps) and create a new app. During registration, select permissions, scopes, and whether the app will access only its own directory or the full Dropbox. Obtain your app key and secret.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.dropboxapi.com/dropbox-api/docs/oauth.md",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Set the redirect URI in Dropbox app settings",
+      "body": "Configure the Dropbox app with the exact callback shown by the current Composio auth-config flow in the redirect URI field of the app settings. Do not use old or legacy redirect examples.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/kb/guide/toolkits-dropbox",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Select appropriate API scopes and access level",
+      "body": "In the Dropbox app's permissions tab, choose the minimum scopes and data access level (App Folder or Full Dropbox) your integration requires.",
+      "status": "documented",
+      "note": "Request only the permissions your integration strictly needs to avoid unnecessary review or declined requests.",
+      "source_url": "https://docs.dropboxapi.com/dropbox-api/docs/oauth.md",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Provide your Dropbox app credentials to Composio (if not managed OAuth)",
+      "body": "In the Composio OAuth flow or configuration for Dropbox, supply your App Key and Secret as shown in the Dropbox App Console.",
+      "status": "documented",
+      "note": "Skip this step if you are using Composio-managed OAuth.",
+      "source_url": "https://docs.composio.dev/toolkits/dropbox",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Connect your Dropbox account through Composio",
+      "body": "Use Composio\u2019s UI or SDK to connect Dropbox. You will be redirected to Dropbox\u2019s login and consent page and asked to approve the requested permissions.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.dropboxapi.com/dropbox-api/docs/oauth.md",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Approve Dropbox OAuth authorization request",
+      "body": "After starting the connection, approve the Dropbox OAuth consent screen to grant Composio (or your app) access to your Dropbox data.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.dropboxapi.com/dropbox-api/docs/oauth.md",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Set redirect URI in Dropbox app (if using own app)",
+      "body": "If registering your own app, manually set the redirect URI in Dropbox to exactly match the current Composio auth-config flow value.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/kb/guide/toolkits-dropbox",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Register and configure a Dropbox app (bring your own option)",
+      "body": "As part of using your own credentials, a human must complete registration and configuration in the Dropbox App Console.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.dropboxapi.com/dropbox-api/docs/oauth.md",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "> This page is for Dropbox API.",
+      "url": "https://docs.dropboxapi.com/dropbox-api/docs/oauth.md",
+      "publisher": "docs.dropboxapi.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "---",
+      "url": "https://docs.composio.dev/kb/guide/toolkits-dropbox",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "---",
+      "url": "https://docs.composio.dev/toolkits/dropbox",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

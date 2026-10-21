@@ -1,0 +1,204 @@
+{
+  "slug": "bitbucket",
+  "name": "Bitbucket",
+  "summary": "This guide explains how to connect to Bitbucket Cloud using OAuth, including changes to token management and recommended approaches for secure integration. Bitbucket Cloud is a collaborative code hosting and review tool, and OAuth is used for secure authentication and access to its APIs.",
+  "decision": "Use the managed OAuth setup provided by the integration platform if available, as this automates token handling and security updates. If you must use your own OAuth app, follow Bitbucket\u2019s updated guidelines to register your application, handle rotating refresh tokens, and ensure requests use the Authorization header. Select the managed path unless your organization requires maintaining its own OAuth credentials.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://composio.dev/toolkits/bitbucket"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Setup path",
+    "status": "inferred",
+    "note": "The passages indicate that managed OAuth is easiest and handles token rotation automatically. Using your own app is possible but requires manual responsibility for compliance with Bitbucket's OAuth updates.",
+    "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html"
+  },
+  "difficulty": {
+    "value": "Low to moderate. Managed OAuth is fast and easy. Using your own OAuth app requires careful adherence to updated security protocols.",
+    "status": "inferred",
+    "note": "Most effort is not technical, but in the registration of your own OAuth application and managing tokens if you do not use a managed solution.",
+    "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html"
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "Use the managed OAuth setup provided by the integration platform if available, as this automates token handling and security updates. If you must use your own OAuth app, follow Bitbucket\u2019s updated guidelines to register your application, handle rotating refresh tokens, and ensure requests use the Authorization header. Select the managed path unless your organization requires maintaining its own OAuth credentials.",
+    "managed": {
+      "value": "Managed OAuth available through platforms like Composio and AWS CodeBuild, which automate token rotation and security compliance.",
+      "status": "documented",
+      "note": "These platforms eliminate the need for manual OAuth token handling.",
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html"
+    },
+    "bring_your_own": {
+      "value": "Supported; you may register your own OAuth app and connect it, but you must handle new Bitbucket OAuth 2.0 requirements, such as token rotation and secure header usage.",
+      "status": "documented",
+      "note": "Manual setup must comply with May 2026 security updates.",
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html"
+    },
+    "redirect_uri": {
+      "value": null,
+      "status": "unknown",
+      "note": "No specific redirect URI is stated in the evidence; use the one provided by your managed integration or Composio dashboard.",
+      "source_url": null
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Bitbucket Cloud account",
+      "body": "You must have an active Bitbucket Cloud account.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/toolkits/bitbucket",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Access to integration platform (Composio, AWS CodeBuild, etc.)",
+      "body": "For managed OAuth, you need an account on the platform facilitating the integration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Bitbucket workspace admin rights (if using your own app)",
+      "body": "Workspace admin rights are necessary for registering OAuth consumers or updating integration settings.",
+      "status": "inferred",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Choose the integration path",
+      "body": "Decide whether to use a managed OAuth provider (like Composio or AWS) or set up your own OAuth app. Use managed unless you have strict requirements.",
+      "status": "inferred",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Sign in to integration platform",
+      "body": "Log in to the dashboard of the managed OAuth service (e.g., Composio, AWS CodeBuild).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Initiate Bitbucket connection",
+      "body": "Select Bitbucket as the source or destination in your integration dashboard and start the connection process.",
+      "status": "inferred",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Authorize the integration",
+      "body": "Grant access when prompted at Bitbucket, which will authorize the managed app or your own app for relevant scopes.",
+      "status": "inferred",
+      "note": "You can review authorized integrations at https://bitbucket.org/account/settings/app-authorizations/",
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Ensure compliance with security updates if using your own app",
+      "body": "If you register your own OAuth consumer, handle rotating refresh tokens, and ensure access tokens are only sent in Authorization headers as Bearer tokens.",
+      "status": "documented",
+      "note": "These changes are enforced from May 2026.",
+      "source_url": "https://community.developer.atlassian.com/t/oauth-2-0-and-api-authentication-changes-for-bitbucket-cloud/99003",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Verify connection",
+      "body": "Check the integration dashboard or the Bitbucket App Authorizations page to confirm the successful link.",
+      "status": "inferred",
+      "note": "The retrieved pages do not state this in matching language.",
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "Missing workspace admin rights",
+      "body": "You cannot register OAuth apps or approve integrations without sufficient Bitbucket permissions.",
+      "status": "inferred",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Non-compliance with new OAuth standards",
+      "body": "Requests not following the updated OAuth 2.0 security requirements (rotating refresh tokens, token in Authorization header) will fail after May 4, 2026.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://community.developer.atlassian.com/t/oauth-2-0-and-api-authentication-changes-for-bitbucket-cloud/99003",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Sign in and authorize Bitbucket app integration",
+      "body": "A person must sign into Bitbucket and approve authorization when prompted by the integration platform.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Bitbucket OAuth app",
+      "url": "https://docs.aws.amazon.com/codebuild/latest/userguide/oauth-app-bitbucket.html",
+      "publisher": "docs.aws.amazon.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Bitbucket MCP Server for Claude and Cursor",
+      "url": "https://composio.dev/toolkits/bitbucket",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "OAuth 2.0 and API authentication changes for Bitbucket Cloud - Bitbucket Cloud - The Atlassian Developer Community",
+      "url": "https://community.developer.atlassian.com/t/oauth-2-0-and-api-authentication-changes-for-bitbucket-cloud/99003",
+      "publisher": "community.developer.atlassian.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

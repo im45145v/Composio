@@ -1,0 +1,225 @@
+{
+  "slug": "google-drive",
+  "name": "Google Drive",
+  "summary": "Google Drive is a cloud storage service that supports uploading, sharing, and managing files. Integrations can use OAuth2 authentication to access user data, with the choice of using a managed OAuth flow (e.g., Composio-managed) or setting up your own OAuth app for customized branding or additional control.",
+  "decision": "If you want the consent screen to show your own app name and logo, or need more control, set up your own OAuth credentials in Google Cloud and use the provided redirect URL. Otherwise, you can connect Google Drive using the managed OAuth flow offered by Composio. For managed setup, no app registration with Google is needed; for custom OAuth, you must create a Google Cloud project, configure OAuth consent, set the correct scopes, enable the Drive API, and use your credentials in Composio.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://docs.composio.dev/toolkits/googledrive"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Managed OAuth is easy, while custom OAuth setup requires hands-on work with Google Cloud Console and possible app verification for sensitive scopes. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Managed flow is quick; custom app setup with Google Cloud requires more time for creating the project, configuring consent, adding scopes, and enabling APIs. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": "Required if using sensitive or unverified scopes, or publishing a public app",
+    "status": "documented",
+    "note": "Google requires app verification for some scopes and public apps, which can take additional time.",
+    "source_url": "https://developers.google.com/workspace/drive/api/guides/api-specific-auth"
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "If you want the consent screen to show your own app name and logo, or need more control, set up your own OAuth credentials in Google Cloud and use the provided redirect URL. Otherwise, you can connect Google Drive using the managed OAuth flow offered by Composio. For managed setup, no app registration with Google is needed; for custom OAuth, you must create a Google Cloud project, configure OAuth consent, set the correct scopes, enable the Drive API, and use your credentials in Composio.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "Composio-managed OAuth is supported for Google Drive. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "Own OAuth credentials can be configured for Google Drive. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": "set a custom redirect URL as described in the documentation",
+      "status": "documented",
+      "note": "Set the redirect URL when creating your OAuth app as per Composio documentation.",
+      "source_url": "https://docs.composio.dev/toolkits/googledrive"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Google account",
+      "body": "You must have a Google account to create an OAuth app or connect Google Drive.",
+      "status": "inferred",
+      "note": null,
+      "source_url": "https://developers.google.com/workspace/drive/api/guides/api-specific-auth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Google Cloud project (for custom OAuth)",
+      "body": "Create a Google Cloud project if you want to use your own OAuth credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Decide between managed OAuth and custom OAuth",
+      "body": "If you do not require custom branding, use the Composio-managed OAuth setup. If you want your own app name/logo or to use custom scopes, proceed with creating your own OAuth app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "For managed OAuth: Connect to Google Drive via the integration/connection flow",
+      "body": "Follow the Composio interface to authenticate with your Google account and grant requested permissions. No additional configuration required.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "For custom OAuth: Create a Google Cloud project",
+      "body": "Sign into Google Cloud Console and create a new project for your app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Enable the Google Drive API in your project",
+      "body": "In your Google Cloud project, go to APIs & Services and enable the Google Drive API.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Configure OAuth consent screen and define scopes",
+      "body": "In Google Cloud Console, configure the OAuth consent screen, provide the required app information, and declare the highest level of permission scopes that your app will request.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.google.com/workspace/drive/api/guides/api-specific-auth",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Create OAuth client credentials",
+      "body": "In Google Cloud Console, create OAuth 2.0 credentials for your app and set the appropriate redirect URI as required by the integration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Use non-sensitive scopes, or submit for Google verification if required",
+      "body": "Choose non-sensitive scopes whenever possible; if your app uses sensitive or restricted scopes, submit your app for Google verification to avoid user blocking and 'unverified app' warnings.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.google.com/workspace/drive/api/guides/api-specific-auth",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Configure your integration to use your OAuth credentials and redirect URI",
+      "body": "Enter your OAuth client credentials and redirect URI in Composio as instructed.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    },
+    {
+      "position": 9,
+      "title": "Authenticate and grant consent",
+      "body": "Launch the connection flow and grant the requested permissions.",
+      "status": "inferred",
+      "note": "Standard OAuth consent process for either managed or own app flow.",
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "Google app verification",
+      "body": "If your app requests sensitive scopes or is intended for public use, you may encounter an 'unverified app' screen and will need to submit your app for Google verification.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.google.com/workspace/drive/api/guides/api-specific-auth",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Authenticate with Google",
+      "body": "User must log into their Google account and actively grant integration permissions during OAuth flow.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure Google Cloud project and consent screen (custom OAuth only)",
+      "body": "A person must manually set up a project, consent screen, OAuth credentials, and redirect URIs if doing a custom app setup.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.google.com/workspace/drive/api/guides/api-specific-auth",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Copy and paste OAuth credentials into integration settings (custom OAuth only)",
+      "body": "A user must transfer the OAuth Client ID, Secret, and redirect URI into Composio's configuration for the custom app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/googledrive",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Choose Google Drive API scopes | Google for DevelopersGoogleGoogle",
+      "url": "https://developers.google.com/workspace/drive/api/guides/api-specific-auth",
+      "publisher": "developers.google.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Google Drive",
+      "url": "https://docs.composio.dev/toolkits/googledrive",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

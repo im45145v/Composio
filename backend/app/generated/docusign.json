@@ -1,0 +1,243 @@
+{
+  "slug": "docusign",
+  "name": "DocuSign",
+  "summary": "DocuSign requires users to create their own OAuth 2.0 Integration Key for API authentication; Composio does not offer a managed OAuth flow, so you must configure your own credentials in the DocuSign Admin panel and wire them to Composio using the provided redirect URI.",
+  "decision": "You must set up your own OAuth app (Integration Key) within the DocuSign Admin panel and connect it to Composio, as Composio-managed authentication is not available for DocuSign.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://docs.composio.dev/toolkits/docusign"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Setup path",
+    "status": "documented",
+    "note": "You must use your own OAuth credentials for DocuSign because there is no managed OAuth support from Composio.",
+    "source_url": "https://docs.composio.dev/toolkits/docusign"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "You need to navigate DocuSign admin, handle credentials, and very carefully set redirect URIs. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "The process includes navigation, credential handling, key storage, and OAuth consent. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You must set up your own OAuth app (Integration Key) within the DocuSign Admin panel and connect it to Composio, as Composio-managed authentication is not available for DocuSign.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "Composio does not provide a managed OAuth solution for DocuSign. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "Users must register and configure their own OAuth credentials for DocuSign. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v1/auth-apps/add",
+      "status": "documented",
+      "note": "This URI must be added as a Redirect URI in the DocuSign Integration Key setup.",
+      "source_url": "https://composio.dev/auth/docusign"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "DocuSign Developer Account",
+      "body": "You must have a DocuSign developer account, which can be created for free at developers.docusign.com.",
+      "status": "inferred",
+      "note": "The cited page adds a condition this claim omits: > Before you start: Make sure you have a DocuSign developer account (free at developers.docusign.com), access to your Composio project, and a browser available to complete the OAuth consent flow.",
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Composio Project Access",
+      "body": "You must have access to your Composio project and be able to edit auth configs.",
+      "status": "inferred",
+      "note": "The cited page adds a condition this claim omits: > Before you start: Make sure you have a DocuSign developer account (free at developers.docusign.com), access to your Composio project, and a browser available to complete the OAuth consent flow.",
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Browser to Complete OAuth",
+      "body": "A browser is required to complete the OAuth user consent flow.",
+      "status": "inferred",
+      "note": "The cited page adds a condition this claim omits: > Before you start: Make sure you have a DocuSign developer account (free at developers.docusign.com), access to your Composio project, and a browser available to complete the OAuth consent flow.",
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Open DocuSign Admin Panel",
+      "body": "Sign in to your DocuSign account at app.docusign.com and navigate to the Admin section using the top navigation bar (Admin role required).",
+      "status": "documented",
+      "note": "If you do not have Admin privileges, contact your DocuSign account owner.",
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Navigate to Apps and Keys",
+      "body": "In the Admin panel sidebar, scroll to INTEGRATIONS and select 'Apps and Keys'.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Add App and Integration Key",
+      "body": "Click 'Add App and Integration Key', enter a clear, descriptive app name (e.g. composio-docusign-connector), and confirm the creation.",
+      "status": "documented",
+      "note": "This name is visible to users on the consent screen.",
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Copy the Integration Key",
+      "body": "On the app details page, copy the Integration Key (Client ID) from the General Info section.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Set Authentication to User Application",
+      "body": "Under Authentication, for User Application, select 'Yes' to indicate your app is confidential (can store client secret securely) and enable Authorization Code Grant.",
+      "status": "documented",
+      "note": "PKCE is optional for the basic flow.",
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Generate and Save Secret Key",
+      "body": "Click '+ Add Secret Key' to generate a client secret. Copy and save it securely as you will not be able to see it again.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Create Auth Config in Composio",
+      "body": "In Composio, create a DocuSign Auth Config using the Client ID and Secret Key generated above, with the specified redirect URI.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Connect User Account",
+      "body": "Connect a DocuSign user account to Composio and complete the OAuth user consent in your browser.",
+      "status": "inferred",
+      "note": "The cited page adds a condition this claim omits: > Before you start: Make sure you have a DocuSign developer account (free at developers.docusign.com), access to your Composio project, and a browser available to complete the OAuth consent flow.",
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "Missing Admin Privileges",
+      "body": "You must have DocuSign Admin rights to access Apps and Keys and set up integration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Log into DocuSign with Admin Rights",
+      "body": "A person must log into their DocuSign account and confirm they have Admin permissions.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create App and Integration Key",
+      "body": "A person needs to create a new Integration Key in the DocuSign Admin panel under Apps and Keys.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Configure OAuth Settings",
+      "body": "A human must configure authentication as a User Application, generate and securely copy both the Integration Key and Secret Key, and add the exact Composio redirect URI.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Input Credentials in Composio",
+      "body": "A person must enter these credentials in Composio when creating the DocuSign Auth Config.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Approve OAuth Consent Screen",
+      "body": "A human must authorize the Composio app with their DocuSign account through the OAuth web flow.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/docusign",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "DocuSign",
+      "url": "https://docs.composio.dev/toolkits/docusign",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Overview",
+      "url": "https://composio.dev/auth/docusign",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

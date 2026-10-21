@@ -157,9 +157,9 @@ export function DirectoryPage() {
             title={filtered ? "No guides match" : "The library is empty"}
             detail={
               path === "own_app_unless_confirmed" && !query.trim()
-                ? "No guide in this library requires your own app before managed auth is ruled out. GitHub, Google Calendar, and Slack can start on managed auth."
+                ? "No guide is currently marked own-app first."
                 : filtered
-                  ? `Nothing in the library matches “${query || "that path"}”. GitHub, Google Calendar, Slack, and Notion are the guides in the library.`
+                  ? `Nothing in the library matches “${query.trim() || "that path"}”.`
                   : "The database has no guides. Start the API so it can load the seed data."
             }
             action={

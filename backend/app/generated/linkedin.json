@@ -1,0 +1,237 @@
+{
+  "slug": "linkedin",
+  "name": "LinkedIn",
+  "summary": "This guide covers integrating with LinkedIn's OAuth using the Authorization Code (3-legged) OAuth 2.0 flow. LinkedIn offers a shared Composio-managed OAuth application for basic and low-volume use, but production applications (or those needing special scopes, avoiding strict shared quotas, or requiring specific company branding/scopes) are advised to register their own LinkedIn OAuth application via the LinkedIn Developer Portal. The setup involves configuring a LinkedIn app, adding redirect URIs, and obtaining Client ID and Secret, after which LinkedIn members authenticate and consent for your app to access their data.",
+  "decision": "You should use your own LinkedIn app unless you confirm that the default Composio-managed OAuth meets your rate limit and scope needs. To use your own app, register a LinkedIn application in the LinkedIn Developer Portal, add your redirect URI, configure required products/scopes, and use the issued Client ID and Secret. If Composio-managed OAuth suffices, you can connect without creating an app, but for most production or special-permission use cases, your own app is necessary.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth2 Authorization Code (3-legged OAuth)",
+    "status": "inferred",
+    "note": "This flow is specified as required for member access and all LinkedIn member APIs. The citation is not an official documentation host.",
+    "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "Default is Composio-managed OAuth, but own app strongly recommended for higher rate limits or special scopes. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Setup involves developer portal registration, redirect URI management and scope/product configuration. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "App registration, copy/paste, portal navigation, and configuration; permissions review may require more time. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": "Only required if you request new scopes/products; otherwise immediate.",
+    "status": "inferred",
+    "note": "Most apps are ready to use immediately unless scope approval is required by LinkedIn.",
+    "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow"
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You should use your own LinkedIn app unless you confirm that the default Composio-managed OAuth meets your rate limit and scope needs. To use your own app, register a LinkedIn application in the LinkedIn Developer Portal, add your redirect URI, configure required products/scopes, and use the issued Client ID and Secret. If Composio-managed OAuth suffices, you can connect without creating an app, but for most production or special-permission use cases, your own app is necessary.",
+    "managed": {
+      "value": "Supported for Composio internal testing or lightweight shared usage, subject to global quota limits.",
+      "status": "inferred",
+      "note": "The retrieved pages do not state this in matching language.",
+      "source_url": "https://docs.composio.dev/toolkits/linkedin"
+    },
+    "bring_your_own": {
+      "value": "Recommended for production, increased rate limits, conflicting scopes, or custom app branding/permissions.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/linkedin"
+    },
+    "redirect_uri": {
+      "value": "The redirect URI must be added to the LinkedIn app's settings, must use HTTPS, be absolute, and match exactly. Example: https://dev.example.com/auth/linkedin/callback or Composio's URI as provided.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "LinkedIn Developer Account",
+      "body": "You must have (or create) a LinkedIn account and access to the LinkedIn Developer Portal.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Company Page Association",
+      "body": "LinkedIn OAuth applications must be associated with a LinkedIn Company Page.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://workos.com/docs/integrations/linkedin-oauth",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Register a LinkedIn Developer Application",
+      "body": "Log in to the LinkedIn Developer Portal and click 'Create App', then fill out the details (name, company page, logo, etc.).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Obtain Client ID and Client Secret",
+      "body": "After creating the app, go to the Auth tab to view/copy your Client ID and Client Secret (called Primary Client Secret in LinkedIn).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Configure Redirect URI",
+      "body": "In the LinkedIn app's Auth tab, add your redirect URI (must start with HTTPS, be absolute, and match exactly the URI used in your integration).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Enable Products and Scopes",
+      "body": "Add required Products such as 'Sign In with LinkedIn using OpenID Connect' and any API scopes. Apply for new products/scopes as needed under the Products tab.",
+      "status": "documented",
+      "note": "Different APIs/tools require different scopes; see LinkedIn and Composio documentation for needed permissions.",
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Integrate OAuth Flow",
+      "body": "Direct the user's browser to LinkedIn's authorization endpoint with required query params: response_type=code, client_id, redirect_uri, state, scope. On approval, exchange code for access token.",
+      "status": "inferred",
+      "note": "All authentication is performed securely on LinkedIn's domain; browser redirected to your app after consent. The citation is not an official documentation host.",
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Test the OAuth Integration",
+      "body": "After connecting, perform basic OAuth flow (log in, approval screen, callback to redirect_uri) and complete connection in the integration platform.",
+      "status": "inferred",
+      "note": "LinkedIn and third-party docs refer to testing/manually authorizing to confirm flow.",
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "Missing Company Page",
+      "body": "You cannot register an OAuth application without associating it to a LinkedIn Company Page.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://workos.com/docs/integrations/linkedin-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Unapproved Scopes or Products",
+      "body": "Access to certain API scopes requires explicit application review/approval by LinkedIn, and the app will not work for those scopes until approval is granted.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Create or access LinkedIn Developer account and Company Page",
+      "body": "Log into LinkedIn and create a Developer account and Company Page if not already available.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://workos.com/docs/integrations/linkedin-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Register LinkedIn App and enter app details",
+      "body": "Manually create and fill out the LinkedIn app registration form, including company page and branding.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://workos.com/docs/integrations/linkedin-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Add redirect URI to LinkedIn OAuth app",
+      "body": "Copy and paste the provided redirect URI from your integration platform (e.g., Composio or your server) into your LinkedIn app settings.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Copy Client ID and Secret",
+      "body": "Manually retrieve and save your LinkedIn app's Client ID and Secret; enter them in your integration platform or environment (never share secrets publicly).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Consent to requested scopes and complete OAuth login",
+      "body": "Manually authorize the app as a LinkedIn member when prompted during the OAuth flow.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "LinkedIn 3-Legged OAuth Flow - LinkedIn | Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow",
+      "publisher": "learn.microsoft.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Authenticating with OAuth 2.0 Overview - LinkedIn | Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authentication",
+      "publisher": "learn.microsoft.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "LinkedIn",
+      "url": "https://docs.composio.dev/toolkits/linkedin",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Untitled page",
+      "url": "https://workos.com/docs/integrations/linkedin-oauth",
+      "publisher": "workos.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

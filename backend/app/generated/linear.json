@@ -1,0 +1,218 @@
+{
+  "slug": "linear",
+  "name": "Linear",
+  "summary": "This guide describes how to connect your own Linear workspace to an external app using OAuth 2.0, either by manually registering your OAuth app with Linear and supplying its credentials or by using the managed Composio gateway which automates much of the configuration and maintenance. The managed gateway allows for faster setup especially with AI tools, while manual OAuth app setup provides more granular control.",
+  "decision": "If you want fast integration and automatic credential management, use the managed Composio setup by adding their MCP server URL in your AI tool and authorizing via the browser; otherwise, register your own OAuth application in your Linear workspace settings under API > OAuth applications, setting the proper callback URL for your integration, copying the provided Client ID/Secret, and supplying these details to your application dashboard.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2.0 authentication is supported for connecting to Linear.",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://linear.app/developers"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Setup path",
+    "status": "inferred",
+    "note": "The cited page adds a condition this claim omits: The table below compares your three main options before you commit to a setup path:",
+    "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app"
+  },
+  "difficulty": {
+    "value": "Using the managed Composio gateway is quick and easy through a web dashboard, while manually registering your own OAuth app requires more steps and moderate technical skill.",
+    "status": "inferred",
+    "note": "Table in e4 calls Composio 'Quick setup', and manual setup 30-60 minutes with command-line or config work.",
+    "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app"
+  },
+  "active_effort": {
+    "value": "The managed path typically takes a few minutes; manually creating an OAuth app and configuring integration may take 30-60 minutes.",
+    "status": "inferred",
+    "note": "'Quick setup' for Composio and '30-60 minutes' for native/manual in e4.",
+    "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app"
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "No evidence indicates approval or review delays.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "If you want fast integration and automatic credential management, use the managed Composio setup by adding their MCP server URL in your AI tool and authorizing via the browser; otherwise, register your own OAuth application in your Linear workspace settings under API > OAuth applications, setting the proper callback URL for your integration, copying the provided Client ID/Secret, and supplying these details to your application dashboard.",
+    "managed": {
+      "value": "Composio offers a managed gateway for Linear, handling authentication, token management, and version updates for you.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/content/linear-mcp-setup"
+    },
+    "bring_your_own": {
+      "value": "You may register your own OAuth application with Linear and configure your external integration using the provided credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app"
+    },
+    "redirect_uri": {
+      "value": null,
+      "status": "unknown",
+      "note": "The cited pages do not contain that URL.",
+      "source_url": null
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Linear account and workspace",
+      "body": "You need a Linear account and a workspace to register applications or perform integrations.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Composio or other integration account (if using managed path)",
+      "body": "If choosing the managed path, register for a Composio account and ensure you have dashboard access.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/linear",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Create Linear account and workspace",
+      "body": "Visit https://linear.app, sign up or log in, and create a workspace by assigning it a name and details.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure OAuth options",
+      "body": "Optionally make the application Public for installation in other workspaces and ensure the Refresh Tokens option is enabled.",
+      "status": "documented",
+      "note": "Refresh Tokens are enabled by default but can be toggled on if needed.",
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Copy OAuth credentials",
+      "body": "After saving the OAuth application, copy the generated Client ID and Client Secret for your records and integration setup.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Paste credentials into integration",
+      "body": "In your integration dashboard (Composio, Nango, etc.), paste the Client ID and Secret from Linear and enable 'Use your own developer credentials' if needed.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Adjust OAuth scopes (if using Composio)",
+      "body": "Default Composio scopes include admin, read, write, issues:create, comments:create. Modify these in the Manage Auth Config tab if needed.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/linear",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Connect and authorize",
+      "body": "Click 'Connect Account' or equivalent in your integration dashboard. Grant consent in the browser to authorize the app and scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/linear",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Sign up or log in to Linear",
+      "body": "Access your Linear account and create a workspace as needed.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Manually register OAuth application",
+      "body": "Navigate to Settings > API > OAuth applications in Linear, and manually create the OAuth app with the requested settings.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Copy and save credentials",
+      "body": "Copy the app's Client ID and Client Secret after the OAuth app is created.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Paste credentials into integration dashboard",
+      "body": "Supply the credentials to the integration platform\u2019s auth setup screen (e.g., Composio, Nango, etc.).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Initiate consent and browser authorization",
+      "body": "Approve requested OAuth scopes and consent to app access in a redirected browser window.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/linear",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Linear Developers",
+      "url": "https://linear.app/developers",
+      "publisher": "linear.app",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "How to register your own Linear OAuth app",
+      "url": "https://nango.dev/docs/api-integrations/linear/how-to-register-your-own-linear-api-oauth-app",
+      "publisher": "nango.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting Up Linear",
+      "url": "https://composio.dev/auth/linear",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Solving context switching with Linear MCP",
+      "url": "https://composio.dev/content/linear-mcp-setup",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

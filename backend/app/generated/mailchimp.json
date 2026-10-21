@@ -1,0 +1,155 @@
+{
+  "slug": "mailchimp",
+  "name": "Mailchimp",
+  "summary": "This guide describes how to set up an OAuth2 application for the Mailchimp Marketing API. You will register your own application with Mailchimp to obtain a client ID and secret, configure a redirect URI, and implement the OAuth2 authorization flow on your own server using technologies such as TypeScript, PHP, or Ruby.",
+  "decision": "Follow the process to register your own application in your Mailchimp account, obtain your unique client ID and secret, set a redirect URI, and implement the OAuth2 flow on your own server as described in the provider documentation. There is no evidence that Mailchimp offers a managed app or that you may skip manual configuration.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "oauth2",
+    "status": "inferred",
+    "note": "The citation is not an official documentation host.",
+    "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Setup path",
+    "status": "inferred",
+    "note": "The citation is not an official documentation host.",
+    "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Requires registering an app and manually implementing the OAuth2 code exchange and token storage. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Hands-on effort to register the app in the Mailchimp portal, implement the OAuth2 server code, and verify your flow. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "Follow the process to register your own application in your Mailchimp account, obtain your unique client ID and secret, set a redirect URI, and implement the OAuth2 flow on your own server as described in the provider documentation. There is no evidence that Mailchimp offers a managed app or that you may skip manual configuration.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "No evidence that Mailchimp offers a managed/instant OAuth app in the provided documentation.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": "Bring your own Mailchimp app is required.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md"
+    },
+    "redirect_uri": {
+      "value": null,
+      "status": "unknown",
+      "note": "The citation is not an official documentation host. The cited pages do not contain that URL.",
+      "source_url": null
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Mailchimp account",
+      "body": "You must have a Mailchimp account.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Register your application",
+      "body": "1. Navigate to the Registered Apps page in your Mailchimp account (https://us1.admin.mailchimp.com/account/oauth2/). 2. Click 'Register An App'. 3. Fill out the 'Register An App' form with your details. 4. Click 'Create' to receive your client_id and client_secret.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Copy and securely store your client_secret",
+      "body": "This is the only time you'll be able to see client_secret, so you need to copy it and store it securely.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Implement the OAuth2 flow on your server",
+      "body": "Write server code to: - Start the OAuth2 process by redirecting users to Mailchimp's authorize endpoint. - Handle the callback from Mailchimp with the authorization code. - Exchange the code for an access token with a POST request to https://login.mailchimp.com/oauth2/token. - Store and use the access token to make authenticated API requests.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register Mailchimp OAuth app",
+      "body": "Complete the app registration process on the Mailchimp portal to retrieve your client credentials.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure redirect URI",
+      "body": "Define and enter a valid redirect URI when registering your app. Use a test URI for local development if needed.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Copy and store client secret immediately",
+      "body": "Securely save the client secret after app creation, as it will not be shown again.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Implement the OAuth flow according to the documentation",
+      "body": "Write server code in your preferred language to handle the user authentication and token exchange.",
+      "status": "inferred",
+      "note": "The citation is not an official documentation host.",
+      "source_url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Set up an OAuth app",
+      "url": "https://mailchimp.com/developer/marketing/build/start-developing/set-up-an-oauth-app.md",
+      "publisher": "mailchimp.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

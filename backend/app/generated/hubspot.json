@@ -1,0 +1,282 @@
+{
+  "slug": "hubspot",
+  "name": "HubSpot",
+  "summary": "HubSpot is an inbound platform for CRM, marketing automation, and analytics, supporting OAuth2 authentication. Apps intended for multiple HubSpot accounts or for listing in the marketplace must use OAuth. Both Composio-managed OAuth and bring-your-own-app OAuth setups are supported, with managed OAuth offered for fastest onboarding but with scope and branding limits.",
+  "decision": "If the default Composio-managed OAuth app's permissions and warning status are acceptable for your use case, you can use Composio-managed auth for the fastest setup. If you need custom scopes, custom branding, or want to avoid 'Connecting an unverified app' warnings, create your own HubSpot developer app and configure OAuth following HubSpot's official guide.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://docs.composio.dev/toolkits/hubspot"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Setup path",
+    "status": "documented",
+    "note": "Composio supports both managed OAuth and custom app setup depending on your scope and branding needs.",
+    "source_url": "https://docs.composio.dev/toolkits/hubspot"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Guides and quickstarts are available and prerequisites (developer account, app) are required. Custom app setup requires hands-on configuration on the HubSpot developer platform. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Creating a HubSpot developer account, setting up an app, configuring scopes, and testing auth typically takes less than 1 hour if prerequisites exist; depends on familiarity. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "If using Composio-managed OAuth, users see an 'unverified app' warning because their app is awaiting HubSpot approval and there is no concrete ETA for full approval. Custom apps require their own review and approval if listed broadly. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "If the default Composio-managed OAuth app's permissions and warning status are acceptable for your use case, you can use Composio-managed auth for the fastest setup. If you need custom scopes, custom branding, or want to avoid 'Connecting an unverified app' warnings, create your own HubSpot developer app and configure OAuth following HubSpot's official guide.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "Composio-managed OAuth is available for HubSpot. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "You can bring your own HubSpot OAuth credentials and custom app if custom scopes or branding are required. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": "The redirect_uri must be an https URL set in your app's Auth settings page; for example, https://www.example.com/auth-callback. It is required for both managed and custom flows.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Create a HubSpot Developer Account",
+      "body": "You'll need a developer account to create and manage OAuth apps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Create or Identify the App you wish to connect",
+      "body": "If bringing your own app, create a new public app in your HubSpot developer dashboard. If using managed auth, no app creation is necessary, but scope limits apply.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/hubspot",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Have a HubSpot Account to authorize into",
+      "body": "You need a HubSpot account (production or test) where the app will be installed.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Super Admin Permissions",
+      "body": "The user installing the app must be a Super Admin or have Marketplace Access permissions.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/working-with-oauth",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Choose Composio-managed OAuth or bring-your-own app",
+      "body": "If your permissions needs and branding are covered by the Composio-managed app, you can proceed with managed OAuth via the Composio UI. Otherwise, proceed to create your own public OAuth app on the HubSpot developer portal.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/hubspot",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure Required and Optional Scopes",
+      "body": "In the HubSpot developer app, mark required and optional scopes as needed. Ensure the scopes match between Composio and your HubSpot app. For managed OAuth, you may only remove optional scopes; you cannot add new ones.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/hubspot",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Set Redirect URI",
+      "body": "Set the redirect URI (https required in production) in your HubSpot app settings; must match the value used in authorization URLs and Composio config.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Direct User to Authorization URL",
+      "body": "Build an authorization URL using your app's client_id, required scopes, and redirect_uri. Send the user to this URL. For managed OAuth, Composio generates this; for custom apps, build and serve the URL in your integration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Authorize App and Handle User Consent",
+      "body": "User reviews the requested permissions in the browser and grants authorization to your app.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Process OAuth Redirect",
+      "body": "User will be redirected back to the specified redirect_uri with a code in the query string if access is granted or with error parameters if not.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Exchange Code for Tokens",
+      "body": "Use the authorization code with the client_id, client_secret, grant_type=authorization_code, and redirect_uri to request access_token and refresh_token from HubSpot's token endpoint.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Store Tokens",
+      "body": "Securely store the access_token and refresh_token for making authenticated API calls.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth",
+      "audience": "shared"
+    },
+    {
+      "position": 9,
+      "title": "Renew Access Token as Needed",
+      "body": "When the access_token expires, use the refresh_token to obtain a new one.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 10,
+      "title": "Test Your Integration",
+      "body": "Verify that the integration can authenticate and access the requested HubSpot APIs according to your selected scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "Unverified App Warning",
+      "body": "If using Composio-managed OAuth, your users may see a 'Connecting an unverified app' warning until the app is fully reviewed and approved by HubSpot.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/hubspot",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Scope Mismatch",
+      "body": "If the scopes requested do not match between the Composio config and the HubSpot app, or aren't enabled in the app, authentication will fail.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/hubspot",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Insufficient User Permissions",
+      "body": "Only Super Admins or users with Marketplace Access permissions can install apps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/working-with-oauth",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Create and configure a HubSpot developer app (if using own app)",
+      "body": "Log in to HubSpot developer portal, create an app, configure scopes, and set the redirect URI.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Enter/connect credentials in Composio (for managed auth, as needed)",
+      "body": "Use the Composio connection UI to initiate OAuth consent using managed credentials, or enter your app credentials if using a custom app setup.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/hubspot",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Grant consent in user\u2019s HubSpot account",
+      "body": "When prompted during OAuth, the user must review requested permissions and accept to complete the authorization.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Working with OAuth",
+      "url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/working-with-oauth",
+      "publisher": "developers.hubspot.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Working with OAuth | OAuth Quickstart Guide",
+      "url": "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
+      "publisher": "developers.hubspot.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "HubSpot",
+      "url": "https://docs.composio.dev/toolkits/hubspot",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Working with OAuth",
+      "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth",
+      "publisher": "developers.hubspot.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

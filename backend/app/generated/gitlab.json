@@ -1,0 +1,221 @@
+{
+  "slug": "gitlab",
+  "name": "GitLab",
+  "summary": "Composio integrates with GitLab using OAuth2 for secure delegated access. The integration allows automated actions such as creating issues, managing repositories, and accessing user profile data. You need to register a user-owned OAuth application in GitLab, configure its credentials in Composio, and select only the necessary scopes for your integration. This setup provides access to GitLab APIs within Composio's automation and AI agent ecosystems.",
+  "decision": "To set up OAuth with GitLab for use in Composio, you need to register your own OAuth application in your GitLab account (user-owned app), configure the redirect URI as https://backend.composio.dev/api/v3/auth-apps/add, copy the client ID and secret, and enter these details into Composio's dashboard along with the same redirect URI and selected scopes. The steps must be performed by a user with access to the relevant GitLab account. Managed setup is not documented.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "oauth2",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://composio.dev/auth/gitlab"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Requires GitLab dashboard access, entering details in Composio, and understanding of scopes. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "To set up OAuth with GitLab for use in Composio, you need to register your own OAuth application in your GitLab account (user-owned app), configure the redirect URI as https://backend.composio.dev/api/v3/auth-apps/add, copy the client ID and secret, and enter these details into Composio's dashboard along with the same redirect URI and selected scopes. The steps must be performed by a user with access to the relevant GitLab account. Managed setup is not documented.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "No evidence supports a managed (pre-registered) app flow.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": "Own app registration is required. The process uses user-owned (or optionally group-owned) apps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab"
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v3/auth-apps/add",
+      "status": "documented",
+      "note": "Must match exactly; do not use a trailing slash.",
+      "source_url": "https://composio.dev/auth/gitlab"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "GitLab Account",
+      "body": "You must have a GitLab account. Sign up for free at gitlab.com if you do not have one.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Composio Account",
+      "body": "You need access to the Composio dashboard to configure OAuth credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Sign in to GitLab",
+      "body": "Go to gitlab.com and sign in with your account.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Navigate to Applications",
+      "body": "Click your profile avatar, choose 'Edit profile', then select 'Applications' from the left sidebar.",
+      "status": "documented",
+      "note": "Direct link: https://gitlab.com/-/profile/applications",
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Create New OAuth Application",
+      "body": "Click 'New Application', set a name (e.g., Composio GitLab Integration), and enter the redirect URI exactly as: https://backend.composio.dev/api/v3/auth-apps/add",
+      "status": "documented",
+      "note": "Do not include a trailing slash; must match Composio's setting.",
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Select OAuth Scopes",
+      "body": "Select scopes per your needs. Examples: read_user, api, read_api. For writing to repos, add write_repository. Only include necessary scopes.",
+      "status": "documented",
+      "note": "Supported: api,read_user,read_api,read_repository,write_repository,read_registry,openid,email,profile",
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Save Application and Copy Credentials",
+      "body": "Click 'Save application'. Copy the Application ID (Client ID) and Secret (Client Secret).",
+      "status": "documented",
+      "note": "Secret is only shown once on GitLab.",
+      "source_url": "https://docs.gitlab.com/integration/oauth_provider/",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Open Composio Dashboard",
+      "body": "Log in at https://platform.composio.dev/, and create new Auth Config for GitLab.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Configure OAuth Details in Composio",
+      "body": "Enter the Client ID, Client Secret, and redirect URI (https://backend.composio.dev/api/v3/auth-apps/add) exactly as on GitLab, and specify the same scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Complete Connection",
+      "body": "Use the Connect Account button in Composio\u2019s Auth Config. When prompted, log in to GitLab and approve requested permissions.",
+      "status": "documented",
+      "note": "The consent screen appears; click Authorise.",
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 9,
+      "title": "Verify Connection",
+      "body": "Composio stores the access token once you authorise and connect.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register app in GitLab",
+      "body": "Manually register the OAuth application and choose required scopes in your GitLab account.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Copy/paste client credentials",
+      "body": "Manually copy the Client ID and Secret from GitLab into Composio\u2019s dashboard.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Authorize access",
+      "body": "Manually approve the application in GitLab when prompted through Composio.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/gitlab",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth 2.0 identity provider API | GitLab Docs",
+      "url": "https://docs.gitlab.com/api/oauth2/",
+      "publisher": "docs.gitlab.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Configure GitLab as an OAuth 2.0 authentication identity provider | GitLab Docs",
+      "url": "https://docs.gitlab.com/integration/oauth_provider/",
+      "publisher": "docs.gitlab.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting up GitLab",
+      "url": "https://composio.dev/auth/gitlab",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

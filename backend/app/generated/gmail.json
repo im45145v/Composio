@@ -1,0 +1,173 @@
+{
+  "slug": "gmail",
+  "name": "Gmail",
+  "summary": "This guide describes how to set up OAuth 2.0 authorization for an application using the Gmail API, emphasizing the selection of appropriate API scopes, and provides important notes on sensitivity levels and the necessity of app verification for certain scopes.",
+  "decision": "You must register your own application in Google Cloud, configure the OAuth consent screen, specify only the required Gmail API scopes, and if your app uses sensitive or restricted scopes, submit it for Google verification.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAuth 2.0",
+    "status": "documented",
+    "note": "The passage repeatedly refers to configuring OAuth 2.0 for authorization with Gmail APIs.",
+    "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes"
+  },
+  "setup_path": {
+    "value": "own_app_unless_confirmed",
+    "label": "Own app unless managed auth is confirmed",
+    "status": "unknown",
+    "note": "The evidence supports only the path of registering and configuring your own Google app for Gmail API; managed/hosted app instructions are not described. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "The user must make several configuration choices, register, and may have to undergo app verification. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": "You will need to register an app, configure consent screen, select scopes, and possibly submit for Google verification.",
+    "status": "inferred",
+    "note": "Several configuration and form-completion steps are specifically called out.",
+    "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes"
+  },
+  "approval_wait": {
+    "value": "You may need to wait for Google's app review and verification if sensitive or restricted scopes are requested.",
+    "status": "inferred",
+    "note": "Verification is required and involves external review for certain scopes.",
+    "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes"
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You must register your own application in Google Cloud, configure the OAuth consent screen, specify only the required Gmail API scopes, and if your app uses sensitive or restricted scopes, submit it for Google verification.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "There is no reference to a managed or hosted app path.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": "You must register your own Google app for OAuth",
+      "status": "documented",
+      "note": "Instructions only describe registering and verifying your own application.",
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes"
+    },
+    "redirect_uri": {
+      "value": null,
+      "status": "unknown",
+      "note": "There is no stated redirect URI.",
+      "source_url": null
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Google Cloud account",
+      "body": "Access to the Google Cloud Console is required to register and configure your app.",
+      "status": "inferred",
+      "note": "App registration details require Google Cloud Console access.",
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Register your app with Google Cloud",
+      "body": "Create a new project or select an existing project in Google Cloud Console and register your application to use Gmail API.",
+      "status": "documented",
+      "note": "Registration is implied as the first setup activity.",
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure OAuth consent screen",
+      "body": "Set up your OAuth consent screen, entering app information and specifying the Gmail API scopes your app needs.",
+      "status": "documented",
+      "note": "Consent screen configuration is mentioned as part of the OAuth setup.",
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Select and declare Gmail API scopes",
+      "body": "Choose the least permissive scopes necessary from the lists provided. Prefer non-sensitive scopes for easier verification.",
+      "status": "documented",
+      "note": "Lists of scope URIs are shown with recommendations on scope sensitivity.",
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Submit for verification if necessary",
+      "body": "If you use sensitive or restricted scopes, or if your app is public, submit your app for verification through Google's process to avoid warnings and ensure users can authorize.",
+      "status": "documented",
+      "note": "Verification process necessity and its triggers are clearly outlined.",
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Access the Google Cloud Console",
+      "body": "Use your Google account to open the Google Cloud Console.",
+      "status": "inferred",
+      "note": "App registration and configuration require Cloud Console access.",
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Register a new application",
+      "body": "Create or select a project and register your app to use Gmail APIs.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Configure the OAuth consent screen",
+      "body": "Fill in app details and specify requested API scopes.",
+      "status": "inferred",
+      "note": "The retrieved pages do not state this in matching language.",
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Select and declare scopes",
+      "body": "Choose only those Gmail API scopes that your app requires, with a preference for non-sensitive scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Submit for app verification (if required)",
+      "body": "If your app requires sensitive or restricted scopes, initiate the verification process in the Cloud Console.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Choose Gmail API scopes | Google for DevelopersGoogleGoogle",
+      "url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+      "publisher": "developers.google.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

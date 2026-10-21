@@ -1,0 +1,246 @@
+{
+  "slug": "shopify",
+  "name": "Shopify",
+  "summary": "Shopify apps must authenticate before accessing the store\u2019s data via the Admin API. You must use your own OAuth credentials, as Composio-managed OAuth is not available. The setup involves registering your Shopify app, configuring permissions (scopes), specifying the redirect URI, retrieving your client credentials, and entering them in Composio before connecting and authorizing with your Shopify store. Shopify apps outside the Shopify admin use the OAuth2 authorization code grant flow.",
+  "decision": "Go to your Shopify Admin Dashboard to create an app and select its scopes and redirect URI, then copy your Client ID and Client Secret. In Composio, set up an OAuth2 authentication config using the credentials from Shopify and specify the same redirect URI as in your Shopify app. Connect your account, authorize the app on Shopify, and ensure the connection is active.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2 authorization code grant",
+    "status": "documented",
+    "note": null,
+    "source_url": "https://shopify.dev/docs/apps/build/authentication-authorization"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "You must bring your own OAuth app; Composio-managed OAuth is not available.",
+    "status": "documented",
+    "note": "Composio does not provide managed OAuth for Shopify; you must use your own app credentials.",
+    "source_url": "https://docs.composio.dev/toolkits/shopify"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "Requires creation and configuration of a developer app in the Shopify dashboard, copying credentials, and manual setup in Composio. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Account creation, app configuration, credential transfer, Composio setup, and login/auth flows. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": null,
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "Go to your Shopify Admin Dashboard to create an app and select its scopes and redirect URI, then copy your Client ID and Client Secret. In Composio, set up an OAuth2 authentication config using the credentials from Shopify and specify the same redirect URI as in your Shopify app. Connect your account, authorize the app on Shopify, and ensure the connection is active.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "Composio-managed OAuth available? No The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "You must use your own developer credentials The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": "https://backend.composio.dev/api/v3/toolkits/auth/callback",
+      "status": "documented",
+      "note": "Or the redirect URI shown in your Composio dashboard config\u2014this must match the Shopify app's redirect URI exactly.",
+      "source_url": "https://composio.dev/auth/shopify"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Shopify admin account",
+      "body": "Sign up at shopify.com and set up your Shopify admin dashboard.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Access to Shopify App Development Dashboard",
+      "body": "You must be able to create and manage apps from the Shopify dev dashboard.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Composio account",
+      "body": "You need a Composio account to add an OAuth config.",
+      "status": "inferred",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Create a Shopify app in the dev dashboard",
+      "body": "Log in to your Shopify admin dashboard, search for 'App Development', and enter the development dashboard.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Configure basic app info",
+      "body": "Click 'Create App', enter an app name, and set the main application URL.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Select API scopes",
+      "body": "Choose the required Shopify API scopes such as read_orders, write_orders, read_products, and write_products. Add others as needed, e.g., read_customers or write_inventory.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Release app version",
+      "body": "Click \u201cRelease\u201d at the bottom of the page to publish your app version.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Copy OAuth client credentials",
+      "body": "Go to the app's settings and copy your Client ID and Client Secret.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Create Auth Config in Composio",
+      "body": "In Composio, create a new Auth Config, select Shopify, choose 'OAuth2', and check 'Use your own developer credentials'. Fill in your Client ID, Client Secret, and Redirect URI.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Connect and authorize",
+      "body": "In Composio, click 'Connect Account', enter external user ID and Shopify store subdomain, and authorize the app when redirected to Shopify.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Confirm successful authentication",
+      "body": "After authorization, close the window and ensure Composio shows your Shopify connection as 'Active'.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [
+    {
+      "position": 1,
+      "title": "Redirect URI mismatch",
+      "body": "Shopify will reject authorization if the redirect URI does not match exactly in both the app dashboard and Composio config.",
+      "status": "inferred",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Insufficient API scopes",
+      "body": "If you do not select all required scopes, certain API calls will fail with 403 errors.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.composio.dev/toolkits/shopify",
+      "audience": "shared"
+    }
+  ],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Create Shopify app and configure it manually",
+      "body": "A person must create and configure the app, select scopes, set URLs, and copy credentials.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Paste credentials into Composio",
+      "body": "You must manually input the Client ID and Client Secret in Composio.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Authorize the app when connecting",
+      "body": "During connection, you must approve the app in Shopify to allow access.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://composio.dev/auth/shopify",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "About app authentication",
+      "url": "https://shopify.dev/docs/apps/build/authentication-authorization",
+      "publisher": "shopify.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Authenticate a standalone or API-only app",
+      "url": "https://shopify.dev/docs/apps/build/authentication-authorization/authenticate-standalone-apps",
+      "publisher": "shopify.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Shopify",
+      "url": "https://docs.composio.dev/toolkits/shopify",
+      "publisher": "docs.composio.dev",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Setting up the Shopify App",
+      "url": "https://composio.dev/auth/shopify",
+      "publisher": "composio.dev",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}

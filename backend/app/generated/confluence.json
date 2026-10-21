@@ -1,0 +1,248 @@
+{
+  "slug": "confluence",
+  "name": "Confluence",
+  "summary": "This guide details how to set up OAuth 2.0 (3LO) authentication for Confluence by registering your own app in the Atlassian Developer Console, adding required scopes, configuring a callback URL, and completing the user authorization and token exchange flow.",
+  "decision": "You must use the bring-your-own-app setup path: register your own OAuth 2.0 app in the Atlassian developer console, specify required scopes, configure your callback URL, and complete the authorization flow as outlined in the official setup instructions. No evidence is given for using a provider-managed or one-click managed credentials flow.",
+  "origin": "researched",
+  "auth_type": {
+    "value": "OAUTH2",
+    "status": "documented",
+    "note": "Passages confirm OAuth2 is required for Atlassian Confluence integration.",
+    "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html"
+  },
+  "setup_path": {
+    "value": "managed_or_own",
+    "label": "Setup path",
+    "status": "documented",
+    "note": "Instructions are only provided for creating and managing your own OAuth 2.0 app in the Atlassian Developer Console, not for a managed-credentials flow.",
+    "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html"
+  },
+  "difficulty": {
+    "value": null,
+    "status": "unknown",
+    "note": "The process involves several hands-on steps including registering an app, configuring scopes, handling authorization, and securely storing credentials. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "active_effort": {
+    "value": null,
+    "status": "unknown",
+    "note": "Manual work is required for app registration, scope assignment, authorization, code capture, and credentials storage. The cited pages do not contain that duration.",
+    "source_url": null
+  },
+  "approval_wait": {
+    "value": null,
+    "status": "unknown",
+    "note": "No evidence describes an approval or review process for app registration.",
+    "source_url": null
+  },
+  "confidence": {
+    "value": null,
+    "status": "unknown",
+    "note": "The steps needed for setup are published in Atlassian and Amazon official documentation. The retrieved pages do not state this in matching language.",
+    "source_url": null
+  },
+  "tested": false,
+  "last_checked": "2026-10-21",
+  "execution_note": "No OAuth flow was executed for this guide. Documented claims are statements in pages retrieved for this run. Inferred claims are a reading of those pages, not a direct statement. Unknown means the retrieved pages did not establish it. Verified is reserved for a setup this project has run, and research does not use it.",
+  "composio": {
+    "decision": "You must use the bring-your-own-app setup path: register your own OAuth 2.0 app in the Atlassian developer console, specify required scopes, configure your callback URL, and complete the authorization flow as outlined in the official setup instructions. No evidence is given for using a provider-managed or one-click managed credentials flow.",
+    "managed": {
+      "value": null,
+      "status": "unknown",
+      "note": "No documentation is provided for a managed OAuth path in the available evidence. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "bring_your_own": {
+      "value": null,
+      "status": "unknown",
+      "note": "Direct instructions are given for registering and configuring your own OAuth app. The retrieved pages do not state this in matching language.",
+      "source_url": null
+    },
+    "redirect_uri": {
+      "value": "https://localhost:8080/callback",
+      "status": "documented",
+      "note": "This is the example callback URL in the documentation; you can use any URL you control for code capture.",
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html"
+    }
+  },
+  "prerequisites": [
+    {
+      "position": 1,
+      "title": "Atlassian Developer Account",
+      "body": "You must have an Atlassian account to access the developer console and register apps.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Confluence Cloud site",
+      "body": "A working Confluence Cloud site is needed to set up and authorize API access.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "AWS Secrets Manager access (for AWS integrations)",
+      "body": "AWS account with permissions to store and manage secrets if you will store credentials in AWS.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    }
+  ],
+  "steps": [
+    {
+      "position": 1,
+      "title": "Register a new OAuth 2.0 (3LO) app",
+      "body": "Sign in to the Atlassian developer console and choose 'Create', then 'OAuth 2.0 integration'. Name your app and confirm creation.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Add required Confluence API scopes",
+      "body": "On the app's Permissions page, add the Confluence API and required scopes such as: read:content:confluence, read:content-details:confluence, read:space:confluence, read:space-details:confluence, read:user:confluence, read:attachment:confluence, read:page:confluence, read:blogpost:confluence, read:custom-content:confluence, and offline_access.",
+      "status": "documented",
+      "note": "Scopes listed are per integration requirements and Atlassian\u2019s recommendations.",
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Set the Callback URL",
+      "body": "On the Authorization page, enter a callback URL you control for code retrieval (example: https://localhost:8080/callback).",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Save Client ID and Client Secret",
+      "body": "On the app's Settings page, copy your Client ID and Secret for use in token exchange and credential storage.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Authorize the application",
+      "body": "Open the authorization URL in a browser with your app values, sign in as an Atlassian user with content access, approve the consent prompt, and capture the authorization code from your callback endpoint.",
+      "status": "documented",
+      "note": "Example authorization URL structure provided in documentation.",
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Exchange the code for tokens",
+      "body": "From a terminal, POST to https://auth.atlassian.com/oauth/token with grant_type=authorization_code, client_id, client_secret, code, and redirect_uri to receive access and refresh tokens.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 7,
+      "title": "Store credentials securely",
+      "body": "Safely store Client ID, Client Secret, access token, and refresh token in a secure system such as AWS Secrets Manager.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 8,
+      "title": "Grant permission for token rotation (if using AWS)",
+      "body": "Add the secretsmanager:PutSecretValue action to the relevant IAM role to enable Bedrock or connectors to rotate tokens.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    }
+  ],
+  "blockers": [],
+  "human_actions": [
+    {
+      "position": 1,
+      "title": "Register your app in Atlassian's Developer Console",
+      "body": "Go to the Atlassian developer console and create an OAuth 2.0 app for your Confluence integration.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 2,
+      "title": "Manually set Confluence API scopes",
+      "body": "On your app's Permissions page, select and add all required scopes.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 3,
+      "title": "Configure callback URL",
+      "body": "Set the callback URL to a location you control in your app settings.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 4,
+      "title": "Manually perform user authorization in browser",
+      "body": "Open the constructed authorization URL, log in, approve, and retrieve the code from your callback endpoint.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 5,
+      "title": "Exchange authorization code for tokens",
+      "body": "Use a HTTP client (e.g., curl) to POST the code and credentials to Atlassian's token endpoint and receive tokens.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    },
+    {
+      "position": 6,
+      "title": "Store credentials and tokens securely",
+      "body": "Place credentials in a secure store such as AWS Secrets Manager for use by integrations.",
+      "status": "documented",
+      "note": null,
+      "source_url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "audience": "shared"
+    }
+  ],
+  "sources": [
+    {
+      "title": "OAuth 2.0 (3LO) apps",
+      "url": "https://developer.atlassian.com/cloud/confluence/oauth-2-3lo-apps/",
+      "publisher": "developer.atlassian.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Set up OAuth 2.0 authentication for Confluence",
+      "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-confluence-oauth2-setup.html",
+      "publisher": "docs.aws.amazon.com",
+      "accessed_on": "2026-10-21"
+    },
+    {
+      "title": "Confluence scopes for OAuth 2.0 (3LO) and Forge apps",
+      "url": "https://developer.atlassian.com/cloud/confluence/scopes-for-oauth-2-3LO-and-forge-apps/",
+      "publisher": "developer.atlassian.com",
+      "accessed_on": "2026-10-21"
+    }
+  ]
+}
