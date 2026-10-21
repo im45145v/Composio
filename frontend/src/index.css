@@ -40,6 +40,10 @@ body {
   outline-offset: 3px;
 }
 
+main :where(p, dd, li, h1, h2, h3, code) {
+  overflow-wrap: break-word;
+}
+
 abbr {
   text-decoration: none;
   border-bottom: 0;

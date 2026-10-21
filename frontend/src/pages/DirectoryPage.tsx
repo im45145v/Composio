@@ -211,17 +211,17 @@ export function DirectoryPage() {
                 <li key={guide.slug}>
                   <Link
                     to={`/guides/${guide.slug}`}
-                    className="block border-b border-line py-5 hover:bg-raised"
+                    className="block min-w-0 border-b border-line py-5 hover:bg-raised"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                       <h2 className="font-serif text-2xl">{guide.name}</h2>
                       <p className="font-mono text-xs text-muted">Checked {formatCheckedDate(guide.last_checked)}</p>
                     </div>
-                    <p className="mt-2 max-w-3xl text-[15px] leading-7">
+                    <p className="mt-2 max-w-3xl break-words text-[15px] leading-7">
                       {previewClaim(readableDecision(guide.decision, guide.summary), 220)}
                     </p>
-                    <dl className="mt-3 grid gap-2 text-sm leading-6 sm:grid-cols-3">
-                      <div>
+                    <dl className="mt-3 grid min-w-0 gap-2 text-sm leading-6 sm:grid-cols-3">
+                      <div className="min-w-0 break-words">
                         <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Difficulty</dt>
                         <dd className="mt-1">
                           {leadFact(guide.difficulty.value, "The cited pages do not rate how hard this is.", 1, 120)}
@@ -232,13 +232,13 @@ export function DirectoryPage() {
                           ) : null}
                         </dd>
                       </div>
-                      <div>
+                      <div className="min-w-0 break-words">
                         <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Hands-on</dt>
                         <dd className="mt-1">
                           {leadFact(guide.active_effort.value, "The cited pages do not say how long the steps take.", 2, 180)}
                         </dd>
                       </div>
-                      <div>
+                      <div className="min-w-0 break-words">
                         <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Approval wait</dt>
                         <dd className="mt-1">
                           {leadFact(

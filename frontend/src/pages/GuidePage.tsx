@@ -167,13 +167,13 @@ function GuideDocument({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start">
-      <article>
+    <div className="grid min-w-0 gap-10 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start">
+      <article className="min-w-0">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
           {guide.origin === "researched" ? "Researched guide" : "Editorial guide"} · {guide.slug}
         </p>
         <h1 className="mt-2 font-serif text-4xl leading-tight sm:text-5xl">{guide.name}</h1>
-        <p className="mt-4 max-w-[68ch] font-serif text-xl leading-8">{decision}</p>
+        <p className="mt-4 max-w-[68ch] break-words font-serif text-xl leading-8">{decision}</p>
 
         <Headline guide={guide} />
         <Handoff />
@@ -230,7 +230,7 @@ function GuideDocument({ slug }: { slug: string }) {
         )}
       </article>
 
-      <aside className="border border-line bg-raised p-5 lg:sticky lg:top-20">
+      <aside className="min-w-0 border border-line bg-raised p-5 lg:sticky lg:top-20">
         <h2 className="text-sm font-semibold">Share this guide</h2>
         <label htmlFor="share-url" className="sr-only">
           Shareable guide URL
@@ -240,7 +240,7 @@ function GuideDocument({ slug }: { slug: string }) {
           readOnly
           value={shareUrl}
           onFocus={(event) => event.currentTarget.select()}
-          className="mt-2 w-full border border-line bg-paper px-2 py-2 font-mono text-xs"
+          className="mt-2 w-full min-w-0 border border-line bg-paper px-2 py-2 font-mono text-xs"
         />
         <p className="mt-6 text-sm font-semibold">Sources</p>
         <ol className="mt-3 space-y-3">
@@ -324,9 +324,14 @@ function Headline({ guide }: { guide: GuideDetail }) {
   const gap = gapSentence(guide);
   return (
     <>
-      <dl className="mt-8 grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2">
-        {facts.map((fact) => (
-          <Meta key={fact.label} label={fact.label} claim={fact.claim} />
+      <dl className="mt-8 grid min-w-0 grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2">
+        {facts.map((fact, index) => (
+          <Meta
+            key={fact.label}
+            label={fact.label}
+            claim={fact.claim}
+            wide={facts.length % 2 === 1 && index === facts.length - 1}
+          />
         ))}
       </dl>
       {gap ? <p className="mt-4 max-w-[68ch] text-sm leading-6 text-muted">{gap}</p> : null}
@@ -543,11 +548,11 @@ function CopyValue({ value }: { value: string }) {
   );
 }
 
-function Meta({ label, claim }: { label: string; claim: Claim }) {
+function Meta({ label, claim, wide = false }: { label: string; claim: Claim; wide?: boolean }) {
   const note = readerNote(claim.note);
   const mark = markFor(claim.status);
   return (
-    <div className="bg-raised px-4 py-4">
+    <div className={`min-w-0 break-words bg-raised px-5 py-4 ${wide ? "sm:col-span-2" : ""}`}>
       <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{label}</dt>
       <dd className="mt-2 text-sm leading-6">
         <span>{claimText(claim.value)}</span>
@@ -586,7 +591,7 @@ function StepList({ title, intro, items }: { title: string; intro: string; items
       <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">{intro}</p>
       <ol className="mt-6 space-y-8">
         {items.map((step, index) => (
-          <li key={step.position} className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3">
+          <li key={step.position} className="grid min-w-0 grid-cols-[2.5rem_minmax(0,1fr)] gap-3">
             <span className="pt-1 font-mono text-sm text-muted">{String(index + 1).padStart(2, "0")}</span>
             <ItemBody item={step} />
           </li>
@@ -621,7 +626,7 @@ function ItemBody({ item }: { item: GuideItem }) {
         <h3 className="text-base font-semibold">{item.title.replace(/\.$/, "")}</h3>
         {mark ? <ClaimMark status={mark} /> : null}
       </div>
-      <p className="mt-2 max-w-[68ch] text-[15px] leading-7">{item.body}</p>
+      <p className="mt-2 max-w-[68ch] break-words text-[15px] leading-7">{item.body}</p>
       {note ? <p className="mt-2 max-w-[68ch] text-sm leading-6 text-muted">{note}</p> : null}
       <SourceLink url={item.source_url} />
     </div>

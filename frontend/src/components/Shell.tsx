@@ -56,7 +56,7 @@ export function Shell() {
           </div>
         </div>
       </header>
-      <main id="content" className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
+      <main id="content" className="mx-auto min-w-0 max-w-6xl px-5 py-8 sm:py-10">
         <Outlet />
       </main>
       <footer className="border-t border-line">
