@@ -132,7 +132,7 @@ export function DirectoryPage() {
               type="button"
               aria-pressed={selected}
               onClick={() => setPath(filter.value)}
-              className={`border px-3 py-1.5 text-sm ${selected ? "border-ink bg-ink text-paper" : "border-line-strong bg-raised text-ink"}`}
+              className={`border px-3.5 py-2 text-sm ${selected ? "border-ink bg-ink text-paper" : "border-line-strong bg-raised text-ink"}`}
             >
               {filter.label}
             </button>
@@ -211,7 +211,7 @@ export function DirectoryPage() {
                 <li key={guide.slug}>
                   <Link
                     to={`/guides/${guide.slug}`}
-                    className="block min-w-0 border-b border-line py-5 hover:bg-raised"
+                    className="block min-w-0 overflow-hidden border-b border-line py-6 hover:bg-raised"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                       <h2 className="font-serif text-2xl">{guide.name}</h2>
@@ -220,7 +220,7 @@ export function DirectoryPage() {
                     <p className="mt-2 max-w-3xl break-words text-[15px] leading-7">
                       {previewClaim(readableDecision(guide.decision, guide.summary), 220)}
                     </p>
-                    <dl className="mt-3 grid min-w-0 gap-2 text-sm leading-6 sm:grid-cols-3">
+                    <dl className="mt-4 grid min-w-0 gap-x-8 gap-y-4 text-sm leading-6 sm:grid-cols-3">
                       <div className="min-w-0 break-words">
                         <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Difficulty</dt>
                         <dd className="mt-1">

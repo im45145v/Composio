@@ -188,7 +188,7 @@ function GuideDocument({ slug }: { slug: string }) {
         </div>
 
         {candidate ? (
-          <div className="mt-6 border border-line bg-raised p-5">
+          <div className="mt-6 border border-line bg-raised p-6">
             <h2 className="font-serif text-2xl">A recheck is waiting</h2>
             <p className="mt-2 max-w-[68ch] text-sm leading-6">
               The live guide was not changed. Promote replaces it with the candidate. Discard leaves this guide as it is.
@@ -230,7 +230,7 @@ function GuideDocument({ slug }: { slug: string }) {
         )}
       </article>
 
-      <aside className="min-w-0 border border-line bg-raised p-5 lg:sticky lg:top-20">
+      <aside className="min-w-0 border border-line bg-raised p-6 lg:sticky lg:top-20">
         <h2 className="text-sm font-semibold">Share this guide</h2>
         <label htmlFor="share-url" className="sr-only">
           Shareable guide URL
@@ -240,7 +240,7 @@ function GuideDocument({ slug }: { slug: string }) {
           readOnly
           value={shareUrl}
           onFocus={(event) => event.currentTarget.select()}
-          className="mt-2 w-full min-w-0 border border-line bg-paper px-2 py-2 font-mono text-xs"
+          className="mt-2 w-full min-w-0 border border-line bg-paper px-3 py-2.5 font-mono text-xs"
         />
         <p className="mt-6 text-sm font-semibold">Sources</p>
         <ol className="mt-3 space-y-3">
@@ -285,7 +285,7 @@ function PathButton({
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={`border px-3 py-1.5 text-sm ${selected ? "border-ink bg-ink text-paper" : "border-line-strong bg-raised text-ink"}`}
+      className={`border px-3.5 py-2 text-sm ${selected ? "border-ink bg-ink text-paper" : "border-line-strong bg-raised text-ink"}`}
     >
       {children}
     </button>
@@ -324,7 +324,7 @@ function Headline({ guide }: { guide: GuideDetail }) {
   const gap = gapSentence(guide);
   return (
     <>
-      <dl className="mt-8 grid min-w-0 grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2">
+      <dl className="mt-8 grid min-w-0 grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2">
         {facts.map((fact, index) => (
           <Meta
             key={fact.label}
@@ -342,14 +342,14 @@ function Headline({ guide }: { guide: GuideDetail }) {
 function Handoff() {
   return (
     <section className="mt-8 grid gap-px border border-line bg-line sm:grid-cols-2" aria-label="Who does what">
-      <div className="bg-raised p-5">
+      <div className="bg-raised p-6">
         <h2 className="font-serif text-2xl">Already collected</h2>
         <p className="mt-2 text-sm leading-6">
           The sources, the redirect URI when a page printed one, the ordered steps, and the checklist. No OAuth app
           was created, no client secret was stored, and no review was submitted.
         </p>
       </div>
-      <div className="bg-raised p-5">
+      <div className="bg-raised p-6">
         <h2 className="font-serif text-2xl">You take over</h2>
         <p className="mt-2 text-sm leading-6">
           Create the app in the provider console, keep the client secret, and submit verification or Marketplace
@@ -367,7 +367,7 @@ function DecideBody({ guide, onRegister }: { guide: GuideDetail; onRegister: () 
   return (
     <>
       {isStated(guide.composio.managed) ? (
-        <section className="mt-10 border border-line bg-raised p-5 sm:p-6">
+        <section className="mt-10 border border-line bg-raised p-6">
           <h2 className="font-serif text-2xl">Managed auth</h2>
           <ClaimBlock title="What you use" claim={guide.composio.managed} />
           <div className="mt-6">
@@ -406,7 +406,7 @@ function RegisterBody({ guide }: { guide: GuideDetail }) {
   const primary = callbackUrl(guide.composio.redirect_uri.value);
   return (
     <>
-      <section className="mt-8 border border-line bg-raised p-5 sm:p-6">
+      <section className="mt-8 border border-line bg-raised p-6">
         <h2 className="font-serif text-2xl">Your own OAuth app</h2>
         {isStated(guide.composio.bring_your_own) ? (
           <ClaimBlock title="When this path applies" claim={guide.composio.bring_your_own} />
@@ -540,8 +540,8 @@ function CopyValue({ value }: { value: string }) {
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-3">
-      <code className="break-all font-mono text-sm">{value}</code>
-      <button type="button" onClick={() => void copy()} className="border border-ink px-2 py-1 text-sm">
+      <code className="min-w-0 break-all font-mono text-sm">{value}</code>
+      <button type="button" onClick={() => void copy()} className="border border-ink px-3 py-1.5 text-sm">
         {copied ? "Copied" : "Copy"}
       </button>
     </div>
@@ -552,7 +552,7 @@ function Meta({ label, claim, wide = false }: { label: string; claim: Claim; wid
   const note = readerNote(claim.note);
   const mark = markFor(claim.status);
   return (
-    <div className={`min-w-0 break-words bg-raised px-5 py-4 ${wide ? "sm:col-span-2" : ""}`}>
+    <div className={`min-w-0 break-words bg-raised p-6 ${wide ? "sm:col-span-2" : ""}`}>
       <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{label}</dt>
       <dd className="mt-2 text-sm leading-6">
         <span>{claimText(claim.value)}</span>
@@ -644,7 +644,7 @@ function SourceLink({ url }: { url?: string | null }) {
     label = url;
   }
   return (
-    <a href={url} title={url} className="mt-2 inline-block text-sm underline decoration-line-strong underline-offset-2">
+    <a href={url} title={url} className="mt-2 inline-block max-w-full break-all text-sm underline decoration-line-strong underline-offset-2">
       {label}
     </a>
   );

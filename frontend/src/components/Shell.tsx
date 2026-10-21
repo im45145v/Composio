@@ -25,7 +25,7 @@ export function Shell() {
         Skip to content
       </a>
       <header className="sticky top-0 z-10 border-b border-line bg-paper/95">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-3">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-4 sm:px-8">
           <Link to="/" className="leading-tight">
             <span className="block font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Composio</span>
             <span className="block text-[15px] font-semibold">Field Guide</span>
@@ -41,7 +41,7 @@ export function Shell() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search guides"
-                  className="w-40 border border-line bg-raised px-2 py-1 text-sm sm:w-52"
+                  className="h-10 w-44 border border-line bg-raised px-3 text-sm sm:w-56"
                 />
               </form>
             ) : null}
@@ -56,11 +56,11 @@ export function Shell() {
           </div>
         </div>
       </header>
-      <main id="content" className="mx-auto min-w-0 max-w-6xl px-5 py-8 sm:py-10">
+      <main id="content" className="mx-auto min-w-0 max-w-6xl px-6 py-10 sm:px-8 sm:py-12">
         <Outlet />
       </main>
       <footer className="border-t border-line">
-        <p className="mx-auto max-w-6xl px-5 py-5 text-sm text-muted">
+        <p className="mx-auto max-w-6xl px-6 py-6 text-sm leading-6 text-muted sm:px-8">
           Guides cite retrieved pages and say when a claim was not run. Research stays on the server.
         </p>
       </footer>

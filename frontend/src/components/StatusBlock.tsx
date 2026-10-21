@@ -21,7 +21,7 @@ export function ErrorBlock({
   onRetry?: () => void;
 }) {
   return (
-    <div role="alert" className="border border-danger/30 bg-danger-soft px-5 py-6">
+    <div role="alert" className="border border-danger/30 bg-danger-soft px-6 py-6">
       <h2 className="font-serif text-2xl">{title}</h2>
       <p className="mt-2 max-w-xl text-sm leading-6">{detail}</p>
       {onRetry ? (
@@ -39,7 +39,7 @@ export function ErrorBlock({
 
 export function EmptyBlock({ title, detail, action }: { title: string; detail: string; action?: ReactNode }) {
   return (
-    <div role="status" className="border border-dashed border-line-strong bg-raised px-5 py-8">
+    <div role="status" className="border border-dashed border-line-strong bg-raised px-6 py-8">
       <h2 className="font-serif text-2xl">{title}</h2>
       <p className="mt-2 max-w-xl text-sm leading-6 text-muted">{detail}</p>
       {action ? <div className="mt-4">{action}</div> : null}

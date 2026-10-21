@@ -40,8 +40,12 @@ body {
   outline-offset: 3px;
 }
 
-main :where(p, dd, li, h1, h2, h3, code) {
+main :where(p, dd, li, h1, h2, h3) {
   overflow-wrap: break-word;
+}
+
+main :where(a, code) {
+  overflow-wrap: anywhere;
 }
 
 abbr {

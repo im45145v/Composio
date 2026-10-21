@@ -317,7 +317,7 @@ export function ResearchPage() {
             </div>
           ) : null}
           {events.length > 0 ? (
-            <ol aria-live="polite" className="space-y-3 border border-line bg-raised px-5 py-5">
+            <ol aria-live="polite" className="space-y-3 border border-line bg-raised px-6 py-6">
               {events.map((item) => (
                 <li key={item.id} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
                   <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{item.stage}</p>
@@ -336,7 +336,7 @@ export function ResearchPage() {
           ) : null}
 
           {state.status === "unavailable" ? (
-            <div role="status" className="border border-line bg-raised px-5 py-6">
+            <div role="status" className="border border-line bg-raised px-6 py-6">
               <h2 className="font-serif text-2xl">Research is not connected</h2>
               <p className="mt-3 text-sm leading-6">{state.result.message}</p>
               <dl className="mt-4 space-y-2 text-sm">
@@ -360,7 +360,7 @@ export function ResearchPage() {
           ) : null}
 
           {state.status === "existing" || state.status === "completed" ? (
-            <div role="status" className="mt-4 border border-line bg-raised px-5 py-6">
+            <div role="status" className="mt-4 border border-line bg-raised px-6 py-6">
               <h2 className="font-serif text-2xl">
                 {state.status === "existing" ? "This guide is already in the library" : "Guide saved"}
               </h2>
@@ -381,7 +381,7 @@ export function ResearchPage() {
           ) : null}
 
           {state.status === "candidate" ? (
-            <div role="status" className="mt-4 border border-line bg-raised px-5 py-6">
+            <div role="status" className="mt-4 border border-line bg-raised px-6 py-6">
               <h2 className="font-serif text-2xl">Candidate ready</h2>
               <p className="mt-3 text-sm leading-6">
                 {state.appName} has a recheck waiting. The live guide was not changed.
@@ -411,7 +411,7 @@ export function ResearchPage() {
         </div>
       </div>
 
-      <aside className="border border-line bg-raised p-5">
+      <aside className="border border-line bg-raised p-6">
         <h2 className="text-sm font-semibold">What a finished guide has to answer</h2>
         <ol className="mt-3 space-y-2 text-sm leading-6">
           {GUIDE_FIELDS.map((field) => (
